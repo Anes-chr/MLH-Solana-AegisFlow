@@ -1,12 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <rect width="256" height="256" rx="56" fill="#090D16"/>
   <defs>
-    <linearGradient id="shieldGrad" x1="40" y1="32" x2="216" y2="224" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="50%" stop-color="#8B5CF6"/>
+    <linearGradient id="aegisCyberGrad" x1="24" y1="20" x2="232" y2="236" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="50%" stop-color="#6366F1"/>
       <stop offset="100%" stop-color="#10B981"/>
     </linearGradient>
+    <linearGradient id="shieldFill" x1="128" y1="24" x2="128" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F172A" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="0.98"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="256" height="256" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
-  <path d="M128 28L48 62V122C48 175.4 82.1 223.8 128 238C173.9 223.8 208 175.4 208 122V62L128 28Z" fill="url(#shieldGrad)" fill-opacity="0.18" stroke="url(#shieldGrad)" stroke-width="10" stroke-linejoin="round"/>
-  <path d="M95 130L118 153L164 105" stroke="#10B981" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Background Base with rounded chamfer -->
+  <rect width="256" height="256" rx="48" fill="#07090E"/>
+  <rect x="1" y="1" width="254" height="254" rx="47" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+
+  <!-- Outer Cyber Shield Contour -->
+  <path d="M128 32L44 68V132C44 186 80 226 128 240C176 226 212 186 212 132V68L128 32Z"
+        fill="url(#shieldFill)"
+        stroke="url(#aegisCyberGrad)"
+        stroke-width="7"
+        stroke-linejoin="round"/>
+
+  <!-- Inner Angular Geometry (Speed Prisms) -->
+  <path d="M128 58L68 85V132C68 172 94 204 128 216C162 204 188 172 188 132V85L128 58Z"
+        stroke="rgba(255,255,255,0.12)"
+        stroke-width="2.5"
+        stroke-dasharray="4 4"/>
+
+  <!-- Central Solana-Inspired Speed Chevron & Aegis Node -->
+  <path d="M96 112L128 80L160 112" stroke="#06B6D4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M84 140L128 96L172 140" stroke="#6366F1" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M102 168L128 142L154 168" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Precision Focal Point -->
+  <circle cx="128" cy="142" r="5" fill="#10B981" filter="url(#glow)"/>
 </svg>

@@ -7,8 +7,13 @@ Ready-to-paste submission fields, 30-second pitch, and timed 2-minute demo video
 ## 1. Required Submission Links (Placeholders to Fill Before Final Click)
 
 - **`REPO_URL`**: `https://github.com/<your-username>/aegisflow`
-- **`LIVE_DEMO_URL`**: `https://aegisflow.vercel.app`
-- **`VIDEO_URL`**: `https://youtu.be/<your-unlisted-or-public-demo-video>`
+  - Push current repo with: `git remote set-url origin https://github.com/<your-username>/aegisflow && git push -u origin master`
+- **`LIVE_DEMO_URL`**: `https://aegisflow.vercel.app` (or `https://<your-project>.vercel.app`)
+  - Deploy instantly with: `npx vercel --prod`
+- **`VIDEO_URL`**: `https://youtu.be/<your-unlisted-or-public-demo-video>` (or Loom link)
+  - **Pre-Recorded 1080p Video File Ready**: `recordings/aegisflow-demo.webm` (11.86 MB).
+  - You can upload `recordings/aegisflow-demo.webm` directly to YouTube or Loom as Unlisted, then paste the URL into the submission form.
+  - To re-record at any time: `npm run record:demo`
 
 ---
 

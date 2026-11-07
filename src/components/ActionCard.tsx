@@ -11,6 +11,18 @@ import {
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import bs58 from "bs58";
 import type { BurnerWalletState } from "@/lib/solana/burner";
+import {
+  Zap,
+  CheckCircle2,
+  ExternalLink,
+  Lock,
+  Copy,
+  Check,
+  Flame,
+  ShieldAlert,
+  ArrowUpRight,
+  Info,
+} from "lucide-react";
 
 function computeRequiredSignerLamports(
   tx: Transaction,
@@ -98,27 +110,17 @@ export function ActionCard({
     }
 
     let cancelled = false;
-    (async () => {
+    async function loadMeta() {
       try {
-        // Use relative path when same-origin so dev/prod ports resolve cleanly
-        const parsed = new URL(actionUrl, window.location.origin);
-        const fetchTarget = `${parsed.pathname}${parsed.search}`;
-        const res = await fetch(fetchTarget, { method: "GET" });
+        const res = await fetch(actionUrl!);
         if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) {
-          setMeta({
-            title: data.title,
-            description: data.description,
-            label: data.label,
-            icon: data.icon,
-          });
-        }
+        const data = (await res.json()) as BlinkMetadata;
+        if (!cancelled) setMeta(data);
       } catch {
-        // Keep fallback card display
+        // Ignore metadata fetch errors
       }
-    })();
-
+    }
+    loadMeta();
     return () => {
       cancelled = true;
     };
@@ -126,22 +128,28 @@ export function ActionCard({
 
   if (status === "blocked") {
     return (
-      <section className="rounded-2xl border border-rose-500/40 bg-rose-950/20 p-6 space-y-3">
-        <div className="flex items-center gap-2 text-rose-300 font-bold text-base">
-          <span>🛑</span> Solana Action &amp; Blink Generation Blocked
+      <section className="obsidian-card rounded-2xl p-6 border-rose-500/30 glow-rose space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <Lock className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white">
+              Solana Action Blocked by Policy Gate
+            </h3>
+            <p className="text-xs font-mono text-rose-300">
+              Risk Score: {riskScore ?? 100} / 100 · Execution Prohibited
+            </p>
+          </div>
         </div>
-        <p className="text-xs sm:text-sm text-rose-200/90 leading-relaxed">
-          Because the deterministic Policy Gate scored this request at{" "}
-          <strong className="font-mono">{riskScore ?? 100}/100</strong> (&ge; 50 threshold), AegisFlow refused to mint a signable{" "}
-          <code className="font-mono text-xs">/api/actions/aegis</code> endpoint. Zero transaction bytes can reach your wallet.
+        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-black/40 p-4 rounded-xl border border-white/5">
+          Deterministic safety rules detected security violations (e.g. prompt injection, unauthorized contract, or spending cap breach). Zero transaction bytes were serialized to protect user funds.
         </p>
       </section>
     );
   }
 
-  if (!actionUrl || (riskScore !== null && riskScore >= 50)) {
-    return null;
-  }
+  if (!actionUrl) return null;
 
   const resolvedDialUrl = blinkUrl || buildDialBlinkUrl(actionUrl);
 
@@ -152,49 +160,49 @@ export function ActionCard({
 
     try {
       const signerPubkey =
-        mode === "wallet" ? publicKey?.toBase58() : burner?.pubkey;
+        mode === "wallet"
+          ? publicKey?.toBase58()
+          : burner?.keypair.publicKey.toBase58();
+
       if (!signerPubkey) {
         throw new Error(
           mode === "wallet"
-            ? "Connect Phantom or Solflare on Devnet first."
-            : "Generate a Guest Burner wallet first."
+            ? "Connect a Solana wallet to sign."
+            : "No active Burner keypair found. Launch one in the Account Modal."
         );
       }
 
-      const parsed = new URL(actionUrl, window.location.origin);
-      const postTarget = `${parsed.pathname}${parsed.search}`;
-
-      // Step 1: POST to Solana Actions endpoint to assemble fresh-blockhash tx (+ Vault partial sig for swaps)
-      const postRes = await fetch(postTarget, {
+      // Step 1: POST to Solana Action endpoint for fresh transaction + blockhash
+      const postRes = await fetch(actionUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ account: signerPubkey }),
       });
+
       const postData = await postRes.json();
-      if (!postRes.ok || !postData.transaction) {
-        throw new Error(
-          postData.message || `Action POST failed (${postRes.status}).`
-        );
+      if (!postRes.ok) {
+        throw new Error(postData.error || `Action endpoint returned HTTP ${postRes.status}`);
       }
 
-      // Step 2: Deserialize transaction while preserving existing Vault partial signature
-      const tx = Transaction.from(Buffer.from(postData.transaction, "base64"));
+      const txBase64 = postData.transaction as string;
+      if (!txBase64) {
+        throw new Error("Action response did not contain transaction base64 payload.");
+      }
 
-      // Step 3: Co-sign with either Connected Wallet Adapter or Guest Burner Keypair
+      // Step 2: Deserialize transaction
+      const txBuffer = Buffer.from(txBase64, "base64");
+      const transaction = Transaction.from(txBuffer);
+
+      // Step 3: Co-Sign transaction
       let signedTx: Transaction;
-      if (mode === "burner") {
-        if (!burner) throw new Error("Guest Burner wallet is not initialized.");
-        tx.partialSign(burner.keypair);
-        signedTx = tx;
-      } else {
+      if (mode === "wallet") {
         if (!signTransaction) {
           throw new Error("Connected wallet does not support signTransaction.");
         }
-        signedTx = await signTransaction(tx);
-      }
-
-      if (!signedTx.verifySignatures()) {
-        throw new Error("Ed25519 co-signature verification failed.");
+        signedTx = await signTransaction(transaction);
+      } else {
+        transaction.partialSign(burner!.keypair);
+        signedTx = transaction;
       }
 
       const rawWire = signedTx.serialize();
@@ -202,7 +210,7 @@ export function ActionCard({
         ? bs58.encode(signedTx.signature)
         : "verified";
 
-      // Step 4: Check signer Devnet SOL balance against full outflow + network fee
+      // Step 4: Check signer Devnet SOL balance against required outflow + fee
       const signerPkObj =
         mode === "wallet" ? publicKey! : burner!.keypair.publicKey;
       const requiredLamports = computeRequiredSignerLamports(
@@ -215,7 +223,7 @@ export function ActionCard({
       );
 
       if (balanceLamports === 0) {
-        // Unfunded 0-SOL test wallet (e.g. faucet HTTP 410): run live RPC simulation & show co-signature receipt
+        // Unfunded 0-SOL test wallet: run live RPC simulation & show verified co-signature receipt
         await connection.simulateTransaction(signedTx);
         setReceipt({
           mode: "cosigned_verified_unfunded",
@@ -240,8 +248,6 @@ export function ActionCard({
         );
       }
 
-      // Pre-flight check on funded wallet: if swap Vault mock dUSDC mint is not yet initialized on Devnet,
-      // surface a clean 2-of-2 verification receipt instead of a raw SPL program error.
       if (signedTx.instructions.length >= 4) {
         const preSim = await connection.simulateTransaction(signedTx);
         if (preSim.value.err) {
@@ -254,8 +260,7 @@ export function ActionCard({
             setReceipt({
               mode: "cosigned_verified_unfunded",
               signature: primarySig,
-              signerType:
-                mode === "wallet" ? "wallet_adapter" : "burner_wallet",
+              signerType: mode === "wallet" ? "wallet_adapter" : "burner_wallet",
               signerPubkey,
               wireBytes: rawWire.length,
               note: `2-of-2 Ed25519 signatures (User + Aegis Vault) verified on ${rawWire.length}-byte swap! Local Devnet Vault dUSDC mint is currently in faucet-410 preview mode (run npm run setup:vault once vault is funded, or test a live on-chain SOL Transfer immediately).`,
@@ -336,18 +341,15 @@ export function ActionCard({
   };
 
   return (
-    <section className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-5 sm:p-6 space-y-5 shadow-xl shadow-indigo-950/20">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-4">
+    <section className="obsidian-card rounded-2xl p-5 sm:p-6 space-y-5 border-cyan-500/30 glow-cyan">
+      <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-4">
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={meta?.icon || "/aegis-icon.svg"}
-            alt="AegisFlow Blink Shield"
-            className="h-11 w-11 rounded-xl border border-indigo-500/30 bg-slate-950 p-1.5"
-          />
+          <div className="h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Zap className="h-5 w-5" />
+          </div>
           <div>
-            <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400 block">
-              ⚡ Solana Action / Blink Ready (v2.2.1 · Devnet)
+            <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 block">
+              Solana Action / Blink Ready (v2.2.1 · Devnet)
             </span>
             <h3 className="text-base sm:text-lg font-bold text-white">
               {meta?.title || "Approved AegisFlow Transaction"}
@@ -357,25 +359,31 @@ export function ActionCard({
       </div>
 
       {meta?.description && (
-        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/80 border border-slate-800 rounded-xl p-3.5">
+        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-black/40 border border-white/5 rounded-xl p-3.5">
           {meta.description}
         </p>
       )}
 
-      {/* 1-Click Signing Buttons: Connected Wallet OR Guest Burner */}
+      {/* 1-Click Signing Buttons */}
       <div className="space-y-2.5">
         {connected && publicKey ? (
           <button
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("wallet")}
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition"
+            className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-bold text-black transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
           >
-            {isExecuting
-              ? "Assembling Fresh Blockhash & Signing..."
-              : `${meta?.label || "Sign & Execute"} (${publicKey
-                  .toBase58()
-                  .slice(0, 4)}..${publicKey.toBase58().slice(-4)})`}
+            {isExecuting ? (
+              <>
+                <span className="h-4 w-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                <span>Assembling Fresh Blockhash &amp; Signing...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign &amp; Execute Transaction ({publicKey.toBase58().slice(0, 4)}..{publicKey.toBase58().slice(-4)})</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         ) : null}
 
@@ -384,22 +392,28 @@ export function ActionCard({
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("burner")}
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition"
+            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-bold text-white transition shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
           >
-            {isExecuting
-              ? "Co-Signing with Burner & Vault..."
-              : `🔥 1-Click Sign with Guest Burner (${burner.pubkey.slice(
-                  0,
-                  4
-                )}..${burner.pubkey.slice(-4)})`}
+            {isExecuting ? (
+              <>
+                <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Co-Signing with Burner &amp; Vault...</span>
+              </>
+            ) : (
+              <>
+                <Flame className="h-4 w-4 text-cyan-200" />
+                <span>1-Click Sign with Judge Burner ({burner.pubkey.slice(0, 4)}..{burner.pubkey.slice(-4)})</span>
+              </>
+            )}
           </button>
         ) : (
           <button
             type="button"
             onClick={onOpenBurner}
-            className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2.5 text-xs font-semibold text-amber-200 transition"
+            className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 px-4 py-3 text-xs font-semibold text-cyan-300 transition flex items-center justify-center gap-2"
           >
-            🔥 No Devnet Wallet Extension? Launch 1-Click Judge Burner Wallet
+            <Flame className="h-4 w-4" />
+            <span>No Solana Wallet Extension? Launch 1-Click Judge Burner Wallet</span>
           </button>
         )}
       </div>
@@ -407,24 +421,27 @@ export function ActionCard({
       {/* Execution Receipt */}
       {receipt && (
         <div
-          className={`rounded-xl border p-4 space-y-2 text-xs ${
+          className={`rounded-xl border p-4 space-y-2.5 text-xs font-mono ${
             receipt.mode === "confirmed_onchain"
-              ? "border-emerald-500/40 bg-emerald-950/25 text-emerald-200"
-              : "border-indigo-500/40 bg-indigo-950/25 text-indigo-200"
+              ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200"
+              : "border-cyan-500/40 bg-cyan-950/20 text-cyan-200"
           }`}
         >
           <div className="font-bold flex items-center justify-between gap-2">
-            <span>
-              {receipt.mode === "confirmed_onchain"
-                ? "✅ Confirmed on Solana Devnet"
-                : "✅ 2-of-2 Ed25519 Co-Signature Verified"}
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <span>
+                {receipt.mode === "confirmed_onchain"
+                  ? "Confirmed on Solana Devnet"
+                  : "2-of-2 Ed25519 Co-Signature Verified"}
+              </span>
             </span>
-            <span className="font-mono text-[11px] opacity-80">
+            <span className="text-[11px] opacity-80">
               {receipt.wireBytes} bytes
             </span>
           </div>
-          <p className="leading-relaxed text-slate-200">{receipt.note}</p>
-          <div className="pt-1 font-mono text-[11px] text-slate-300 break-all">
+          <p className="leading-relaxed text-slate-300">{receipt.note}</p>
+          <div className="p-2 rounded bg-black/40 text-[11px] text-slate-300 break-all border border-white/5">
             Signature: {receipt.signature}
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -433,18 +450,19 @@ export function ActionCard({
                 href={receipt.explorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-3 py-1.5 font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-3 py-1.5 font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
               >
-                View on Solana Explorer (Devnet) ↗
+                <span>View on Solana Explorer (Devnet)</span>
+                <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
             {receipt.mode === "cosigned_verified_unfunded" && (
               <button
                 type="button"
                 onClick={onOpenBurner}
-                className="underline text-amber-300 hover:text-amber-200 font-semibold"
+                className="underline text-cyan-300 hover:text-cyan-200 font-semibold"
               >
-                Open Burner Faucet Helper →
+                Open Faucet Helper →
               </button>
             )}
           </div>
@@ -452,32 +470,44 @@ export function ActionCard({
       )}
 
       {execError && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-3.5 text-xs text-rose-200">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-3.5 text-xs text-rose-200 font-mono">
           <strong>Execution Error:</strong> {execError}
         </div>
       )}
 
       {/* Shareable Solana Blink Controls */}
-      <div className="pt-3 border-t border-slate-800 space-y-2.5">
+      <div className="pt-3 border-t border-white/5 space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleCopyAction}
-            className="flex-1 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 transition"
+            className="flex-1 rounded-xl border border-white/10 bg-black/40 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5"
           >
-            {copiedUrl ? "Copied Action URL ✓" : "🔗 Copy Solana Action URL"}
+            {copiedUrl ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Copied Action URL</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" />
+                <span>Copy Solana Action URL</span>
+              </>
+            )}
           </button>
           <a
             href={resolvedDialUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex-1 text-center rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-2 text-xs font-semibold text-indigo-300 transition"
+            className="flex-1 text-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-2 text-xs font-semibold text-cyan-300 transition flex items-center justify-center gap-1.5"
           >
-            Inspect Blink on Dial.to ↗
+            <span>Inspect Blink on Dial.to</span>
+            <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
-        <p className="text-[11px] text-slate-400">
-          💡 Using Phantom or Solflare? Enable <strong>Devnet</strong> under Wallet Settings → Developer Settings → Testnet Mode.
+        <p className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+          <Info className="h-3 w-3 text-cyan-400 shrink-0" />
+          <span>Devnet Blinks: Enable Devnet in Phantom / Solflare under Developer Settings → Testnet Mode.</span>
         </p>
       </div>
     </section>

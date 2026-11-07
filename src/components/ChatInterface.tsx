@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Terminal, ArrowRight, ShieldAlert, Zap, Sliders, Play, Sparkles } from "lucide-react";
 
 export interface PresetScenario {
   id: string;
@@ -14,7 +15,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
   {
     id: "safe-swap",
     label: "Safe Swap (0.1 SOL → dUSDC)",
-    badge: "Happy Path",
+    badge: "Swap",
     prompt: "Swap 0.1 SOL to USDC with 50bps slippage",
     tone: "emerald",
   },
@@ -58,16 +59,12 @@ export interface ChatInterfaceProps {
   onSubmit: (overridePrompt?: string) => void;
 }
 
-const TONE_STYLES: Record<PresetScenario["tone"], string> = {
-  emerald:
-    "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300",
-  indigo:
-    "border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300",
-  rose: "border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300",
-  amber:
-    "border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300",
-  slate:
-    "border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-slate-300",
+const TONE_BADGES: Record<PresetScenario["tone"], string> = {
+  emerald: "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300",
+  indigo: "border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300",
+  rose: "border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300",
+  amber: "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300",
+  slate: "border-white/10 bg-white/5 hover:bg-white/10 text-slate-300",
 };
 
 export function ChatInterface({
@@ -86,43 +83,54 @@ export function ChatInterface({
   };
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 sm:p-6 shadow-xl shadow-slate-950/50 space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-            <span>🤖</span> Conversational DeFi Intent Console
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Type any natural language Solana command or launch a 1-click security test scenario.
-          </p>
+    <section className="obsidian-card rounded-2xl p-5 sm:p-6 space-y-5">
+      {/* Title & Spending Policy Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Terminal className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <span>Intent Studio</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 text-slate-400 border border-white/5">
+                LangGraph + Gemini
+              </span>
+            </h2>
+            <p className="text-xs text-slate-400">
+              Conversational DeFi command input with pre-flight simulation and deterministic policy enforcement.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <label
-            htmlFor="spending-cap-select"
-            className="text-xs font-medium text-slate-400"
-          >
-            Policy Cap:
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+          <Sliders className="h-3.5 w-3.5 text-slate-400" />
+          <label htmlFor="spending-cap-select" className="text-xs font-mono text-slate-400">
+            Spending Cap:
           </label>
           <select
             id="spending-cap-select"
             value={spendingCapSol}
             onChange={(e) => onSpendingCapChange(Number(e.target.value))}
             disabled={isLoading}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-semibold text-indigo-300 outline-none focus:border-indigo-500"
+            className="bg-transparent text-xs font-mono font-bold text-cyan-300 outline-none cursor-pointer"
           >
-            <option value={0.25}>0.25 SOL</option>
-            <option value={1.0}>1.00 SOL (Default)</option>
-            <option value={2.5}>2.50 SOL</option>
+            <option value={0.25} className="bg-slate-900">0.25 SOL</option>
+            <option value={1.0} className="bg-slate-900">1.00 SOL (Default)</option>
+            <option value={2.5} className="bg-slate-900">2.50 SOL</option>
           </select>
         </div>
       </div>
 
-      {/* 1-Click Judge Scenario Presets */}
+      {/* Preset Scenarios Chips */}
       <div className="space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          1-Click Demo Scenarios:
-        </span>
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <span className="font-semibold uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Interactive Demo Scenarios:</span>
+          </span>
+          <span className="text-[11px] font-mono">1-Click Simulation</span>
+        </div>
         <div className="flex flex-wrap gap-2">
           {PRESET_SCENARIOS.map((sc) => (
             <button
@@ -133,9 +141,9 @@ export function ChatInterface({
                 onPromptChange(sc.prompt);
                 onSubmit(sc.prompt);
               }}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition flex items-center gap-1.5 disabled:opacity-50 ${TONE_STYLES[sc.tone]}`}
+              className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition flex items-center gap-1.5 disabled:opacity-50 ${TONE_BADGES[sc.tone]}`}
             >
-              <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-slate-950/60">
+              <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-black/40 border border-white/5">
                 {sc.badge}
               </span>
               <span>{sc.label}</span>
@@ -144,30 +152,36 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* Prompt Input & Submit */}
+      {/* Terminal Input Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => onPromptChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          maxLength={2000}
-          placeholder='e.g. "Swap 0.1 SOL to USDC with 50bps slippage" or try an adversarial prompt...'
-          className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-        />
+        <div className="relative flex-1 flex items-center">
+          <span className="absolute left-4 font-mono font-bold text-cyan-400 select-none text-sm">&gt;</span>
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) => onPromptChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            maxLength={2000}
+            placeholder='e.g. "Swap 0.1 SOL to USDC" or enter a custom prompt...'
+            className="w-full obsidian-input rounded-xl pl-8 pr-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 font-mono focus:outline-none transition"
+          />
+        </div>
         <button
           type="button"
           onClick={() => onSubmit()}
           disabled={isLoading || !prompt.trim()}
-          className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2 shrink-0"
+          className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 disabled:opacity-50 px-5 sm:px-6 py-3 text-xs sm:text-sm font-bold text-white transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 shrink-0"
         >
           {isLoading ? (
             <>
-              <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              <span>Running 5-Stage Pipeline...</span>
+              <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              <span>Simulating...</span>
             </>
           ) : (
-            <span>Run Pre-Flight Sentinel →</span>
+            <>
+              <span>Simulate &amp; Guardrail</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
           )}
         </button>
       </div>

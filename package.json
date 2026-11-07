@@ -17,6 +17,7 @@
     "test:agent-pipeline": "tsx scripts/test-agent-pipeline.ts",
     "test:blinks-api": "tsx scripts/test-blinks-api.ts",
     "test:stretches": "tsx scripts/test-stretches.ts",
+    "record:demo": "tsx scripts/record-demo-video.ts",
     "verify:deps": "npm ls @solana/web3.js"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "dotenv": "^16.4.7",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.1.7",
+    "playwright": "^1.65.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.15",

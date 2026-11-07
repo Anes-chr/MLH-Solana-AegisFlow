@@ -8,7 +8,7 @@ import { AgentTimeline } from "@/components/AgentTimeline";
 import { RiskCard } from "@/components/RiskCard";
 import { ActionCard } from "@/components/ActionCard";
 import { TokenScanner } from "@/components/TokenScanner";
-import { BurnerWalletModal } from "@/components/BurnerWalletModal";
+import { AccountModal } from "@/components/wallet/AccountModal";
 import {
   type BurnerWalletState,
   loadExistingBurnerWallet,
@@ -23,6 +23,15 @@ import type { DeFiIntent } from "@/lib/agent/schema";
 import type { PythPriceData } from "@/lib/solana/pyth";
 import type { JupiterReferenceQuote } from "@/lib/solana/jupiter";
 import type { SimulationResult } from "@/lib/solana/simulation";
+import {
+  ShieldCheck,
+  Zap,
+  Activity,
+  Layers,
+  ExternalLink,
+  ChevronRight,
+  Info,
+} from "lucide-react";
 
 interface AgentApiResponse {
   status: "approved" | "caution" | "blocked" | "readonly" | "unsupported";
@@ -51,7 +60,7 @@ export default function Home() {
   const [requestError, setRequestError] = useState<string | null>(null);
 
   const [burner, setBurner] = useState<BurnerWalletState | null>(null);
-  const [isBurnerModalOpen, setIsBurnerModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   useEffect(() => {
     const existing = loadExistingBurnerWallet();
@@ -98,43 +107,47 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#07090E] text-slate-100">
       <WalletHeader
-        burnerPubkey={burner?.pubkey ?? null}
-        onOpenBurner={() => setIsBurnerModalOpen(true)}
+        burner={burner}
+        onSelectBurner={setBurner}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-7">
-        {/* Compact Hero Banner */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-900 pb-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+        {/* Pro Hero & Security Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-white/5 pb-6">
           <div className="space-y-2 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Solana Devnet · LangGraph 5-Stage Sentinel · Solana Actions v2.2.1
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-mono font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Solana Actions v2.2.1 · LangGraph Multi-Agent · Devnet Guardrails</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               AegisFlow:{" "}
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
-                AI DeFi Copilot with Pre-Flight Guardrails
+              <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
+                Autonomous DeFi Copilot &amp; Pre-Flight Guardrails
               </span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-              Natural language plans are simulated on Solana Devnet, scored by a deterministic 6-rule TypeScript policy engine, anchored on-chain via SPL Memo SHA-256, and minted into shareable Solana Blinks only when safe.
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-mono">
+              Natural-language intent parsing, Pyth oracle pricing, atomic 2-of-2 Ed25519 co-signing, and on-chain SPL Memo plan proofs with deterministic safety gates.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsBurnerModalOpen(true)}
-              className="rounded-xl border border-slate-800 bg-slate-900/90 hover:border-amber-500/40 px-3.5 py-2 text-xs font-semibold text-slate-200 transition"
-            >
-              {burner
-                ? `🔥 Active Burner: ${burner.pubkey.slice(0, 6)}...${burner.pubkey.slice(-4)}`
-                : "🔥 Launch 1-Click Judge Burner Wallet"}
-            </button>
+          {/* Quick HUD Metrics */}
+          <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
+              <span className="text-[10px] text-slate-500 block uppercase">Policy Enforcer</span>
+              <span className="text-emerald-400 font-bold">Deterministic</span>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
+              <span className="text-[10px] text-slate-500 block uppercase">Atomic Settlement</span>
+              <span className="text-cyan-400 font-bold">572 Bytes</span>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
+              <span className="text-[10px] text-slate-500 block uppercase">On-Chain Memo</span>
+              <span className="text-indigo-400 font-bold">SHA-256 Proof</span>
+            </div>
           </div>
         </div>
 
@@ -158,7 +171,7 @@ export default function Home() {
             )}
 
             {requestError && (
-              <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200">
+              <div className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-mono text-rose-300">
                 <strong>Pipeline Error:</strong> {requestError}
               </div>
             )}
@@ -192,7 +205,7 @@ export default function Home() {
                       riskScore={agentState.risk?.score ?? null}
                       status={agentState.status}
                       burner={burner}
-                      onOpenBurner={() => setIsBurnerModalOpen(true)}
+                      onOpenBurner={() => setIsAccountModalOpen(true)}
                     />
                   </div>
                 )}
@@ -203,17 +216,17 @@ export default function Home() {
           <TokenScanner />
         )}
 
-        {/* Transparent Devnet Architecture Footer */}
-        <footer className="mt-auto pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        {/* Footer */}
+        <footer className="mt-auto pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-4">
           <div>
-            AegisFlow · Built on Solana Devnet (`@solana/web3.js` 1.99.0 + `@solana/actions` + LangGraph.js)
+            AegisFlow v1.0 · MLH Solana Hackathon · Solana Devnet
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <a
               href="/actions.json"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-slate-300 transition font-mono"
+              className="hover:text-cyan-400 transition"
             >
               /actions.json
             </a>
@@ -221,27 +234,28 @@ export default function Home() {
               href="https://explorer.solana.com/?cluster=devnet"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-slate-300 transition"
+              className="hover:text-cyan-400 transition"
             >
-              Solana Explorer (Devnet)
+              Solana Explorer (Devnet) ↗
             </a>
             <a
               href="https://faucet.solana.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-slate-300 transition"
+              className="hover:text-cyan-400 transition"
             >
-              Devnet Faucet
+              Devnet Faucet ↗
             </a>
           </div>
         </footer>
       </main>
 
-      <BurnerWalletModal
-        isOpen={isBurnerModalOpen}
-        onClose={() => setIsBurnerModalOpen(false)}
+      {/* Account / Wallet Modal */}
+      <AccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
         burner={burner}
-        onBurnerChange={setBurner}
+        onSelectBurner={setBurner}
       />
     </div>
   );

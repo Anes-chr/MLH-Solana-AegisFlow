@@ -2,6 +2,18 @@
 
 import React, { useState } from "react";
 import type { TokenScanReport } from "@/lib/solana/scanner";
+import {
+  Search,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Layers,
+  FileText,
+  Sliders,
+  Check,
+  X,
+  ExternalLink,
+} from "lucide-react";
 
 const PRESET_MINTS = [
   {
@@ -66,34 +78,43 @@ export function TokenScanner() {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/75 p-5 sm:p-7 space-y-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span>🔍</span> SPL Token &amp; Token-2022 Safety Scanner
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Inspect on-chain Mint Authority, Freeze Authority, holder concentration, and Token-2022 TLV hooks before trading.
-          </p>
+    <section className="obsidian-card rounded-2xl p-5 sm:p-7 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Search className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <span>Token Safety &amp; Token-2022 Scanner</span>
+            </h2>
+            <p className="text-xs text-slate-400">
+              Inspect on-chain Mint Authority, Freeze Authority, and Token-2022 TLV binary extensions before trading.
+            </p>
+          </div>
         </div>
-        <select
-          aria-label="Solana cluster selector"
-          value={cluster}
-          onChange={(e) =>
-            setCluster(e.target.value as "auto" | "mainnet-beta" | "devnet")
-          }
-          className="self-start sm:self-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-mono text-indigo-300"
-        >
-          <option value="auto">Auto-Detect (Mainnet → Devnet)</option>
-          <option value="mainnet-beta">Mainnet-Beta Only</option>
-          <option value="devnet">Devnet Only</option>
-        </select>
+
+        <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+          <Sliders className="h-3.5 w-3.5 text-slate-400" />
+          <select
+            aria-label="Solana cluster selector"
+            value={cluster}
+            onChange={(e) =>
+              setCluster(e.target.value as "auto" | "mainnet-beta" | "devnet")
+            }
+            className="bg-transparent text-xs font-mono font-bold text-cyan-300 outline-none cursor-pointer"
+          >
+            <option value="auto" className="bg-slate-900">Auto-Detect</option>
+            <option value="mainnet-beta" className="bg-slate-900">Mainnet-Beta Only</option>
+            <option value="devnet" className="bg-slate-900">Devnet Only</option>
+          </select>
+        </div>
       </div>
 
       {/* Preset Mint Chips */}
       <div className="space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          1-Click Token Inspection Presets:
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+          Inspection Presets:
         </span>
         <div className="flex flex-wrap gap-2">
           {PRESET_MINTS.map((p) => (
@@ -106,7 +127,7 @@ export function TokenScanner() {
                 setCluster(p.cluster);
                 runScan(p.mint, p.cluster);
               }}
-              className="rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition disabled:opacity-50"
+              className="rounded-xl border border-white/10 bg-black/40 hover:bg-white/10 px-3 py-1.5 text-xs font-mono text-slate-200 transition disabled:opacity-50"
             >
               {p.label}
             </button>
@@ -121,20 +142,20 @@ export function TokenScanner() {
           value={mintInput}
           onChange={(e) => setMintInput(e.target.value)}
           placeholder="Paste any Solana SPL Token or Token-2022 Mint address..."
-          className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-mono text-white placeholder-slate-500 outline-none focus:border-indigo-500"
+          className="flex-1 obsidian-input rounded-xl px-4 py-3 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none transition"
         />
         <button
           type="button"
           disabled={isScanning || !mintInput.trim()}
           onClick={() => runScan(mintInput, cluster)}
-          className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white transition shrink-0"
+          className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 disabled:opacity-50 px-6 py-3 text-xs sm:text-sm font-bold text-white transition shadow-lg shadow-cyan-500/20 shrink-0"
         >
-          {isScanning ? "Unpacking Mint..." : "Inspect On-Chain Mint"}
+          {isScanning ? "Unpacking TLV Data..." : "Inspect Mint Layout"}
         </button>
       </div>
 
       {scanError && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-4 text-xs text-rose-200">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-mono text-rose-300">
           <strong>Invalid Mint Request:</strong> {scanError}
         </div>
       )}
@@ -142,24 +163,24 @@ export function TokenScanner() {
       {report && (
         <div className="space-y-5 pt-2">
           {/* Verdict Banner */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className={`rounded-full px-3 py-0.5 text-xs font-bold border ${
+                  className={`rounded-full px-3 py-0.5 text-xs font-mono font-bold border ${
                     report.verdict === "SAFE"
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
                       : report.verdict === "CAUTION"
-                      ? "bg-amber-500/20 text-amber-200 border-amber-500/40"
-                      : "bg-rose-500/20 text-rose-200 border-rose-500/40"
+                      ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
+                      : "bg-rose-500/10 text-rose-200 border-rose-500/30"
                   }`}
                 >
                   {report.verdict} · {report.riskScore}/100 Risk
                 </span>
-                <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-xs font-mono text-indigo-300">
+                <span className="rounded bg-white/5 border border-white/5 px-2 py-0.5 text-xs font-mono text-cyan-300">
                   {report.tokenStandard}
                 </span>
-                <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-xs font-mono text-slate-400">
+                <span className="rounded bg-white/5 border border-white/5 px-2 py-0.5 text-xs font-mono text-slate-400">
                   {report.cluster}
                 </span>
               </div>
@@ -171,12 +192,12 @@ export function TokenScanner() {
             {report.decimals !== null && (
               <div className="sm:text-right text-xs font-mono space-y-1">
                 <div className="text-slate-400">
-                  Decimals: <span className="text-white">{report.decimals}</span>
+                  Decimals: <span className="text-white font-bold">{report.decimals}</span>
                 </div>
                 {report.supplyUi !== null && (
                   <div className="text-slate-400">
                     Supply:{" "}
-                    <span className="text-white">
+                    <span className="text-white font-bold">
                       {report.supplyUi.toLocaleString(undefined, {
                         maximumFractionDigits: 2,
                       })}
@@ -190,7 +211,7 @@ export function TokenScanner() {
           {/* Authority & Extension Telemetry */}
           {report.isMintAccount && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-1">
+              <div className="rounded-xl border border-white/5 bg-black/40 p-4 space-y-1 font-mono">
                 <span className="text-[11px] uppercase text-slate-400 block">
                   Mint Authority
                 </span>
@@ -204,13 +225,13 @@ export function TokenScanner() {
                   {report.mintAuthorityRevoked ? "Revoked (Fixed)" : "Active"}
                 </span>
                 {report.mintAuthority && (
-                  <span className="text-[11px] font-mono text-slate-400 block truncate">
+                  <span className="text-[11px] text-slate-500 block truncate">
                     {report.mintAuthority}
                   </span>
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-1">
+              <div className="rounded-xl border border-white/5 bg-black/40 p-4 space-y-1 font-mono">
                 <span className="text-[11px] uppercase text-slate-400 block">
                   Freeze Authority
                 </span>
@@ -226,13 +247,13 @@ export function TokenScanner() {
                     : "Active (Can Freeze)"}
                 </span>
                 {report.freezeAuthority && (
-                  <span className="text-[11px] font-mono text-slate-400 block truncate">
+                  <span className="text-[11px] text-slate-500 block truncate">
                     {report.freezeAuthority}
                   </span>
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-1">
+              <div className="rounded-xl border border-white/5 bg-black/40 p-4 space-y-1 font-mono">
                 <span className="text-[11px] uppercase text-slate-400 block">
                   Token-2022 Extensions
                 </span>
@@ -241,7 +262,7 @@ export function TokenScanner() {
                     ? `${report.extensions.length} Detected`
                     : "None (Standard)"}
                 </span>
-                <span className="text-[11px] font-mono text-slate-400 block truncate">
+                <span className="text-[11px] text-slate-500 block truncate">
                   {report.extensions.length > 0
                     ? report.extensions.join(", ")
                     : "Standard 82-byte Mint"}
@@ -251,34 +272,39 @@ export function TokenScanner() {
           )}
 
           {/* Plain-English Summary */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/90 p-4 space-y-1.5">
+          <div className="rounded-xl border border-white/5 bg-black/40 p-4 space-y-1.5 font-mono">
             {report.bullets.map((b, i) => (
-              <p key={i} className="text-xs sm:text-sm text-slate-200">
-                {b}
+              <p key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                <span className="text-cyan-400">•</span>
+                <span>{b}</span>
               </p>
             ))}
           </div>
 
           {/* Detailed Findings */}
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-2 font-mono">
             {report.findings.map((f) => (
               <div
                 key={f.id}
                 className={`rounded-xl border px-3.5 py-2.5 text-xs flex items-start justify-between gap-3 ${
                   f.passed
-                    ? "border-slate-800 bg-slate-950/60 text-slate-300"
-                    : "border-rose-500/40 bg-rose-950/30 text-rose-200"
+                    ? "border-white/5 bg-black/30 text-slate-300"
+                    : "border-rose-500/30 bg-rose-500/5 text-rose-200"
                 }`}
               >
-                <div>
-                  <span className="font-semibold">
-                    {f.passed ? "✓ " : "✖ "}
-                    {f.label}:
-                  </span>{" "}
-                  <span className="text-slate-300">{f.detail}</span>
+                <div className="flex items-start gap-2">
+                  {f.passed ? (
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <X className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <span className="font-semibold text-white">{f.label}:</span>{" "}
+                    <span className="text-slate-300">{f.detail}</span>
+                  </div>
                 </div>
                 {f.penalty > 0 && (
-                  <span className="shrink-0 rounded bg-rose-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-300">
+                  <span className="shrink-0 rounded bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-300">
                     +{f.penalty}
                   </span>
                 )}
