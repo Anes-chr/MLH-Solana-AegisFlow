@@ -1,42 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
   <defs>
-    <linearGradient id="aegisCyberGrad" x1="24" y1="20" x2="232" y2="236" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#06B6D4"/>
-      <stop offset="50%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#10B981"/>
+    <linearGradient id="aegisShieldGrad" x1="32" y1="24" x2="224" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="40%" stop-color="#6928EA"/>
+      <stop offset="100%" stop-color="#4318FF"/>
     </linearGradient>
-    <linearGradient id="shieldFill" x1="128" y1="24" x2="128" y2="232" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0F172A" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0.98"/>
+    <linearGradient id="coreLight" x1="128" y1="64" x2="128" y2="192" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
     </linearGradient>
-    <filter id="glow" x="0" y="0" width="256" height="256" filterUnits="userSpaceOnUse">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#121327"/>
+      <stop offset="100%" stop-color="#080913"/>
+    </linearGradient>
+    <radialGradient id="subtleAura" cx="128" cy="116" r="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6928EA" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#6928EA" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- Background Base with rounded chamfer -->
-  <rect width="256" height="256" rx="48" fill="#07090E"/>
-  <rect x="1" y="1" width="254" height="254" rx="47" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+  <!-- App Icon Base -->
+  <rect width="256" height="256" rx="56" fill="url(#bgGrad)"/>
+  <rect x="1" y="1" width="254" height="254" rx="55" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+  <rect x="2" y="2" width="252" height="252" rx="54" stroke="rgba(139,92,246,0.22)" stroke-width="1.5"/>
 
-  <!-- Outer Cyber Shield Contour -->
-  <path d="M128 32L44 68V132C44 186 80 226 128 240C176 226 212 186 212 132V68L128 32Z"
-        fill="url(#shieldFill)"
-        stroke="url(#aegisCyberGrad)"
-        stroke-width="7"
+  <!-- Radiant Aura -->
+  <circle cx="128" cy="120" r="88" fill="url(#subtleAura)"/>
+
+  <!-- Sovereign Aegis Shield Outer Contour -->
+  <path d="M128 36 C152 36 210 48 216 56 C220 64 220 132 210 166 C198 206 150 228 128 236 C106 228 58 206 46 166 C36 132 36 64 40 56 C46 48 104 36 128 36 Z"
+        fill="#0D0E1F"
+        stroke="url(#aegisShieldGrad)"
+        stroke-width="5"
         stroke-linejoin="round"/>
 
-  <!-- Inner Angular Geometry (Speed Prisms) -->
-  <path d="M128 58L68 85V132C68 172 94 204 128 216C162 204 188 172 188 132V85L128 58Z"
-        stroke="rgba(255,255,255,0.12)"
-        stroke-width="2.5"
-        stroke-dasharray="4 4"/>
+  <!-- Inner Dynamic Dual-Ribbon Flow ('A' Crest & Solana Stream) -->
+  <!-- Left Sovereign Wing -->
+  <path d="M128 62 L66 124 C62 128 64 136 70 136 L92 136 L128 100 L128 62 Z"
+        fill="url(#aegisShieldGrad)"/>
 
-  <!-- Central Solana-Inspired Speed Chevron & Aegis Node -->
-  <path d="M96 112L128 80L160 112" stroke="#06B6D4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M84 140L128 96L172 140" stroke="#6366F1" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M102 168L128 142L154 168" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right Sovereign Wing -->
+  <path d="M128 62 L190 124 C194 128 192 136 186 136 L164 136 L128 100 L128 62 Z"
+        fill="url(#aegisShieldGrad)"/>
 
-  <!-- Precision Focal Point -->
-  <circle cx="128" cy="142" r="5" fill="#10B981" filter="url(#glow)"/>
+  <!-- Dynamic Solana Velocity Keel (Lower Flow Loop) -->
+  <path d="M84 146 C80 146 76 152 80 156 L122 208 C125 212 131 212 134 208 L176 156 C180 152 176 146 172 146 L148 146 L128 172 L108 146 L84 146 Z"
+        fill="url(#aegisShieldGrad)"/>
+
+  <!-- Central Cryptographic Core Diamond (Audit & Guardrail Anchor) -->
+  <polygon points="128,104 148,128 128,152 108,128"
+           fill="url(#coreLight)"/>
+  <circle cx="128" cy="128" r="4.5" fill="#6928EA"/>
 </svg>

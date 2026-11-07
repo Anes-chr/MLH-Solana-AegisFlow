@@ -3,9 +3,9 @@ import "./globals.css";
 import { ClientWalletProvider } from "@/components/wallet/ClientWalletProvider";
 
 export const metadata: Metadata = {
-  title: "AegisFlow — Pro AI DeFi Copilot & Pre-Flight Guardrails",
+  title: "AegisFlow — Autonomous DeFi Copilot & Pre-Flight Guardrails",
   description:
-    "Autonomous intent-driven DeFi copilot with pre-flight transaction simulation, deterministic safety guardrails, and 1-click Solana Blinks.",
+    "Autonomous intent-driven Solana DeFi copilot with pre-flight transaction simulation, deterministic safety guardrails, and 1-click Solana Blinks.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -23,7 +23,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body className="min-h-screen bg-[#07090E] text-slate-100 antialiased font-sans selection:bg-cyan-500/20 selection:text-cyan-200">
+      <body className="min-h-screen bg-[#080912] text-slate-100 antialiased font-sans selection:bg-violet-600/30 selection:text-violet-200">
         <ClientWalletProvider>{children}</ClientWalletProvider>
       </body>
     </html>

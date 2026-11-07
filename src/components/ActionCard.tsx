@@ -22,9 +22,10 @@ import {
   ShieldAlert,
   ArrowUpRight,
   Info,
+  Sparkles,
 } from "lucide-react";
 
-function computeRequiredSignerLamports(
+export function computeRequiredSignerLamports(
   tx: Transaction,
   signerPubkey: PublicKey
 ): number {
@@ -128,9 +129,9 @@ export function ActionCard({
 
   if (status === "blocked") {
     return (
-      <section className="obsidian-card rounded-2xl p-6 border-rose-500/30 glow-rose space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+      <section className="obsidian-card rounded-3xl p-6 sm:p-7 border-rose-500/40 glow-rose space-y-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="h-11 w-11 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
             <Lock className="h-5 w-5" />
           </div>
           <div>
@@ -142,7 +143,7 @@ export function ActionCard({
             </p>
           </div>
         </div>
-        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-black/40 p-4 rounded-xl border border-white/5">
+        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-black/50 p-4 rounded-2xl border border-rose-500/20">
           Deterministic safety rules detected security violations (e.g. prompt injection, unauthorized contract, or spending cap breach). Zero transaction bytes were serialized to protect user funds.
         </p>
       </section>
@@ -341,14 +342,14 @@ export function ActionCard({
   };
 
   return (
-    <section className="obsidian-card rounded-2xl p-5 sm:p-6 space-y-5 border-cyan-500/30 glow-cyan">
+    <section className="obsidian-card rounded-3xl p-6 sm:p-7 space-y-5 border-violet-500/25 glow-violet shadow-xl">
       <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-            <Zap className="h-5 w-5" />
+        <div className="flex items-center gap-3.5">
+          <div className="icon-well shadow-inner">
+            <Zap className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 block">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-violet-400 block font-semibold">
               Solana Action / Blink Ready (v2.2.1 · Devnet)
             </span>
             <h3 className="text-base sm:text-lg font-bold text-white">
@@ -359,19 +360,19 @@ export function ActionCard({
       </div>
 
       {meta?.description && (
-        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-black/40 border border-white/5 rounded-xl p-3.5">
+        <p className="text-xs text-slate-300 font-mono leading-relaxed bg-[#0C0D1B]/80 border border-white/5 rounded-2xl p-4">
           {meta.description}
         </p>
       )}
 
       {/* 1-Click Signing Buttons */}
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {connected && publicKey ? (
           <button
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("wallet")}
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-bold text-black transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+            className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 px-6 py-3.5 text-xs sm:text-sm font-bold text-black transition shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
           >
             {isExecuting ? (
               <>
@@ -392,7 +393,7 @@ export function ActionCard({
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("burner")}
-            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-bold text-white transition shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
+            className="btn-pill-primary w-full py-3.5 text-xs sm:text-sm font-bold text-white transition shadow-lg shadow-violet-600/30 flex items-center justify-center gap-2"
           >
             {isExecuting ? (
               <>
@@ -401,7 +402,7 @@ export function ActionCard({
               </>
             ) : (
               <>
-                <Flame className="h-4 w-4 text-cyan-200" />
+                <Flame className="h-4 w-4 text-violet-200" />
                 <span>1-Click Sign with Judge Burner ({burner.pubkey.slice(0, 4)}..{burner.pubkey.slice(-4)})</span>
               </>
             )}
@@ -410,7 +411,7 @@ export function ActionCard({
           <button
             type="button"
             onClick={onOpenBurner}
-            className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 px-4 py-3 text-xs font-semibold text-cyan-300 transition flex items-center justify-center gap-2"
+            className="w-full rounded-full border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 px-5 py-3.5 text-xs font-semibold text-violet-300 transition flex items-center justify-center gap-2 shadow-sm"
           >
             <Flame className="h-4 w-4" />
             <span>No Solana Wallet Extension? Launch 1-Click Judge Burner Wallet</span>
@@ -421,10 +422,10 @@ export function ActionCard({
       {/* Execution Receipt */}
       {receipt && (
         <div
-          className={`rounded-xl border p-4 space-y-2.5 text-xs font-mono ${
+          className={`rounded-2xl border p-4 space-y-2.5 text-xs font-mono shadow-md ${
             receipt.mode === "confirmed_onchain"
-              ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200"
-              : "border-cyan-500/40 bg-cyan-950/20 text-cyan-200"
+              ? "border-emerald-500/40 bg-emerald-950/25 text-emerald-200"
+              : "border-violet-500/40 bg-violet-950/25 text-violet-200"
           }`}
         >
           <div className="font-bold flex items-center justify-between gap-2">
@@ -436,12 +437,12 @@ export function ActionCard({
                   : "2-of-2 Ed25519 Co-Signature Verified"}
               </span>
             </span>
-            <span className="text-[11px] opacity-80">
+            <span className="text-[11px] opacity-80 px-2 py-0.5 rounded-full bg-black/40 border border-white/5">
               {receipt.wireBytes} bytes
             </span>
           </div>
           <p className="leading-relaxed text-slate-300">{receipt.note}</p>
-          <div className="p-2 rounded bg-black/40 text-[11px] text-slate-300 break-all border border-white/5">
+          <div className="p-2.5 rounded-xl bg-black/40 text-[11px] text-slate-300 break-all border border-white/5">
             Signature: {receipt.signature}
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -450,7 +451,7 @@ export function ActionCard({
                 href={receipt.explorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-3 py-1.5 font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-3.5 py-1.5 font-semibold text-emerald-300 hover:bg-emerald-500/30 transition shadow-sm"
               >
                 <span>View on Solana Explorer (Devnet)</span>
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -460,7 +461,7 @@ export function ActionCard({
               <button
                 type="button"
                 onClick={onOpenBurner}
-                className="underline text-cyan-300 hover:text-cyan-200 font-semibold"
+                className="underline text-violet-300 hover:text-violet-200 font-semibold"
               >
                 Open Faucet Helper →
               </button>
@@ -470,18 +471,18 @@ export function ActionCard({
       )}
 
       {execError && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-950/30 p-3.5 text-xs text-rose-200 font-mono">
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-xs text-rose-200 font-mono shadow-md">
           <strong>Execution Error:</strong> {execError}
         </div>
       )}
 
       {/* Shareable Solana Blink Controls */}
-      <div className="pt-3 border-t border-white/5 space-y-2.5">
+      <div className="pt-3.5 border-t border-white/5 space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleCopyAction}
-            className="flex-1 rounded-xl border border-white/10 bg-black/40 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5"
+            className="flex-1 rounded-full border border-white/10 bg-black/40 hover:bg-white/10 px-4 py-2.5 text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5 shadow-sm"
           >
             {copiedUrl ? (
               <>
@@ -499,14 +500,14 @@ export function ActionCard({
             href={resolvedDialUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex-1 text-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-2 text-xs font-semibold text-cyan-300 transition flex items-center justify-center gap-1.5"
+            className="flex-1 text-center rounded-full border border-violet-500/30 bg-violet-500/15 hover:bg-violet-500/25 px-4 py-2.5 text-xs font-semibold text-violet-200 transition flex items-center justify-center gap-1.5 shadow-sm"
           >
             <span>Inspect Blink on Dial.to</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
         <p className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
-          <Info className="h-3 w-3 text-cyan-400 shrink-0" />
+          <Info className="h-3 w-3 text-violet-400 shrink-0" />
           <span>Devnet Blinks: Enable Devnet in Phantom / Solflare under Developer Settings → Testnet Mode.</span>
         </p>
       </div>

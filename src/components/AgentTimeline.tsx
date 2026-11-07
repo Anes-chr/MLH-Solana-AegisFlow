@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import type { TimelineStep, PipelineStageKey } from "@/lib/agent/graph";
-import { GitCommit, Clock, CheckCircle2, AlertOctagon, CornerDownRight, X } from "lucide-react";
+import { GitCommit, Clock, CheckCircle2, AlertOctagon, CornerDownRight, X, Sparkles } from "lucide-react";
 
 export interface AgentTimelineProps {
   steps: TimelineStep[];
@@ -35,36 +35,43 @@ export function AgentTimeline({
   }
 
   return (
-    <section className="obsidian-card rounded-2xl p-5 sm:p-6 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
-        <div className="flex items-center gap-2">
-          <GitCommit className="h-4 w-4 text-cyan-400" />
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-            5-Stage LangGraph Pipeline
-          </h3>
+    <section className="obsidian-card rounded-3xl p-6 sm:p-7 space-y-4 border border-violet-500/15 shadow-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="icon-well shadow-inner">
+            <GitCommit className="h-4 w-4 text-violet-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              5-Stage LangGraph Pipeline
+            </h3>
+            <p className="text-xs text-slate-400 font-normal">
+              Autonomous multi-agent orchestration graph with deterministic gate verification.
+            </p>
+          </div>
         </div>
         {totalLatencyMs != null && !isLoading && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5 text-xs font-mono text-slate-300">
-            <Clock className="h-3 w-3 text-cyan-400" />
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/25 text-xs font-mono text-violet-300">
+            <Clock className="h-3 w-3 text-violet-400" />
             <span>Total: {totalLatencyMs.toLocaleString()} ms</span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
         {STAGE_META.map((meta) => {
           const step = stepMap.get(meta.key);
           const isExpanded = expandedKey === meta.key;
 
-          let cardStyle = "border-white/5 bg-black/30 text-slate-400";
+          let cardStyle = "border-white/5 bg-[#101224]/80 text-slate-400 hover:border-violet-500/20";
           let badgeText = isLoading ? "RUNNING" : "IDLE";
           let badgeStyle = "bg-white/5 text-slate-400 border border-white/5";
 
           if (isLoading && !step) {
             cardStyle =
-              "border-cyan-500/30 bg-cyan-500/5 text-cyan-200 animate-pulse";
+              "border-violet-500/40 bg-violet-500/10 text-violet-200 animate-pulse";
             badgeText = "ACTIVE";
-            badgeStyle = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30";
+            badgeStyle = "bg-violet-500/20 text-violet-300 border border-violet-500/30";
           } else if (step) {
             if (step.status === "completed") {
               cardStyle =
@@ -92,8 +99,8 @@ export function AgentTimeline({
               onClick={() =>
                 setExpandedKey(isExpanded ? null : meta.key)
               }
-              className={`rounded-xl border p-3 text-left transition flex flex-col justify-between gap-2.5 ${cardStyle} ${
-                isExpanded ? "ring-1 ring-cyan-400 border-cyan-400" : ""
+              className={`rounded-2xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 ${cardStyle} ${
+                isExpanded ? "ring-2 ring-violet-500 border-violet-400" : ""
               }`}
             >
               <div className="space-y-1 w-full">
@@ -102,7 +109,7 @@ export function AgentTimeline({
                     {meta.label}
                   </span>
                   <span
-                    className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-semibold ${badgeStyle}`}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-semibold ${badgeStyle}`}
                   >
                     {badgeText}
                   </span>
@@ -120,21 +127,21 @@ export function AgentTimeline({
 
       {/* Expandable Stage Telemetry Modal/Drawer */}
       {expandedKey && stepMap.get(expandedKey) && (
-        <div className="rounded-xl border border-white/10 bg-black/60 p-4 space-y-2">
+        <div className="rounded-2xl border border-violet-500/25 bg-[#0C0D1A]/95 p-4 space-y-2.5 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-semibold text-cyan-300 flex items-center gap-1.5">
-              <CornerDownRight className="h-3.5 w-3.5" />
+            <span className="text-xs font-mono font-semibold text-violet-300 flex items-center gap-1.5">
+              <CornerDownRight className="h-3.5 w-3.5 text-violet-400" />
               <span>Node Telemetry: {stepMap.get(expandedKey)?.stage} ({stepMap.get(expandedKey)?.durationMs} ms)</span>
             </span>
             <button
               type="button"
               onClick={() => setExpandedKey(null)}
-              className="p-1 rounded text-slate-400 hover:text-white"
+              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <pre className="max-h-56 overflow-auto text-[11px] font-mono text-slate-300 bg-black/40 p-3 rounded-lg border border-white/5 leading-relaxed">
+          <pre className="max-h-56 overflow-auto text-[11px] font-mono text-slate-300 bg-black/50 p-3 rounded-xl border border-white/5 leading-relaxed">
             {JSON.stringify(
               stepMap.get(expandedKey)?.details ?? {
                 summary: stepMap.get(expandedKey)?.summary,

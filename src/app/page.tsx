@@ -107,7 +107,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#07090E] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#080912] text-slate-100">
       <WalletHeader
         burner={burner}
         onSelectBurner={setBurner}
@@ -118,35 +118,35 @@ export default function Home() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
         {/* Pro Hero & Security Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-white/5 pb-6">
-          <div className="space-y-2 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-mono font-medium">
+          <div className="space-y-2.5 max-w-3xl">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 text-violet-300 text-xs font-semibold shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>Solana Actions v2.2.1 · LangGraph Multi-Agent · Devnet Guardrails</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              AegisFlow:{" "}
-              <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
-                Autonomous DeFi Copilot &amp; Pre-Flight Guardrails
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+              AI Proposes.{" "}
+              <span className="text-violet-400">
+                Deterministic Guardrails Enforce.
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-mono">
-              Natural-language intent parsing, Pyth oracle pricing, atomic 2-of-2 Ed25519 co-signing, and on-chain SPL Memo plan proofs with deterministic safety gates.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+              Autonomous intent copilot for Solana DeFi. Pre-flight RPC simulation, live Pyth oracle verification, atomic 2-of-2 Ed25519 co-signing, and cryptographic on-chain SPL Memo audit proofs.
             </p>
           </div>
 
           {/* Quick HUD Metrics */}
           <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
-            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
-              <span className="text-[10px] text-slate-500 block uppercase">Policy Enforcer</span>
+            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
+              <span className="text-[10px] text-slate-400 block uppercase">Policy Enforcer</span>
               <span className="text-emerald-400 font-bold">Deterministic</span>
             </div>
-            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
-              <span className="text-[10px] text-slate-500 block uppercase">Atomic Settlement</span>
-              <span className="text-cyan-400 font-bold">572 Bytes</span>
+            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
+              <span className="text-[10px] text-slate-400 block uppercase">Atomic Settlement</span>
+              <span className="text-violet-300 font-bold">572 Bytes</span>
             </div>
-            <div className="px-3 py-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
-              <span className="text-[10px] text-slate-500 block uppercase">On-Chain Memo</span>
-              <span className="text-indigo-400 font-bold">SHA-256 Proof</span>
+            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
+              <span className="text-[10px] text-slate-400 block uppercase">On-Chain Memo</span>
+              <span className="text-indigo-300 font-bold">SHA-256 Proof</span>
             </div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function Home() {
             )}
 
             {requestError && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-mono text-rose-300">
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-mono text-rose-300 shadow-md">
                 <strong>Pipeline Error:</strong> {requestError}
               </div>
             )}
@@ -226,7 +226,7 @@ export default function Home() {
               href="/actions.json"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-violet-400 transition"
             >
               /actions.json
             </a>
@@ -234,7 +234,7 @@ export default function Home() {
               href="https://explorer.solana.com/?cluster=devnet"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-violet-400 transition"
             >
               Solana Explorer (Devnet) ↗
             </a>
@@ -242,7 +242,7 @@ export default function Home() {
               href="https://faucet.solana.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-violet-400 transition"
             >
               Devnet Faucet ↗
             </a>

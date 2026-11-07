@@ -85,50 +85,57 @@ export function WalletHeader({
 
   if (!mounted) {
     return (
-      <header className="w-full border-b border-white/5 bg-[#07090E]/90 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="h-9 w-32 bg-white/5 rounded-lg animate-pulse" />
-        <div className="h-9 w-40 bg-white/5 rounded-lg animate-pulse" />
+      <header className="w-full sticky top-3 z-40 px-3 sm:px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 px-4 py-3 rounded-full bg-[#0E0F1E]/80 backdrop-blur-xl border border-white/10 shadow-lg">
+          <div className="h-8 w-32 bg-white/5 rounded-full animate-pulse" />
+          <div className="h-8 w-40 bg-white/5 rounded-full animate-pulse" />
+        </div>
       </header>
     );
   }
 
   return (
     <>
-      <header className="w-full border-b border-white/10 bg-[#07090E]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 py-3">
+      <header className="w-full sticky top-3 z-40 px-3 sm:px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 px-3.5 sm:px-5 py-2.5 rounded-full bg-[#0D0E1C]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_-4px_rgba(0,0,0,0.6),0_0_24px_-6px_rgba(105,40,234,0.2)]">
           {/* Left: Brand Emblem + Wordmark */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelectTab?.("copilot")}>
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500/20 via-indigo-500/20 to-emerald-500/20 border border-white/10 flex items-center justify-center shadow-inner">
-                <svg className="h-5 w-5" viewBox="0 0 32 32" fill="none">
-                  <path d="M16 4L6 8V15C6 21.6 10.3 27.6 16 29C21.7 27.6 26 21.6 26 15V8L16 4Z" stroke="#06B6D4" stroke-width="2" stroke-linejoin="round"/>
-                  <path d="M11 16L15 20L21 12" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+          <div className="flex items-center gap-5 sm:gap-7">
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => onSelectTab?.("copilot")}
+            >
+              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-md group-hover:scale-105 transition-transform duration-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/aegis-icon.svg"
+                  alt="AegisFlow Logo"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-base tracking-tight text-white">
+                  <span className="font-extrabold text-base tracking-tight text-white group-hover:text-violet-200 transition-colors">
                     AegisFlow
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30">
                     DEVNET
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400 block -mt-0.5 font-mono">
+                <span className="text-[11px] text-slate-400 block -mt-0.5 font-medium">
                   Autonomous DeFi Guardrails
                 </span>
               </div>
             </div>
 
-            {/* Desktop Tabs */}
+            {/* Desktop Capsule Tabs */}
             {onSelectTab && (
-              <nav className="hidden md:flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/5 text-xs font-semibold">
+              <nav className="hidden md:flex items-center gap-1 rounded-full bg-black/40 p-1 border border-white/5 text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => onSelectTab("copilot")}
-                  className={`px-3.5 py-1.5 rounded-lg transition ${
+                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                     activeTab === "copilot"
-                      ? "bg-white/10 text-white shadow-sm"
+                      ? "bg-violet-600 text-white shadow-md shadow-violet-600/30 font-bold"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
@@ -137,9 +144,9 @@ export function WalletHeader({
                 <button
                   type="button"
                   onClick={() => onSelectTab("scanner")}
-                  className={`px-3.5 py-1.5 rounded-lg transition ${
+                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
                     activeTab === "scanner"
-                      ? "bg-white/10 text-white shadow-sm"
+                      ? "bg-violet-600 text-white shadow-md shadow-violet-600/30 font-bold"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
@@ -150,13 +157,13 @@ export function WalletHeader({
           </div>
 
           {/* Right: Network Status + Account Pill */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             {/* Live Helius Devnet Status */}
             <div
-              className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono font-medium text-emerald-400"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-400"
               title="Connected to Helius Devnet RPC"
             >
-              <Activity className="h-3.5 w-3.5 animate-pulse" />
+              <Activity className="h-3.5 w-3.5 animate-pulse text-emerald-400" />
               <span>Helius Devnet</span>
             </div>
 
@@ -164,22 +171,22 @@ export function WalletHeader({
             <button
               onClick={() => setIsModalOpen(true)}
               aria-label="Account and Wallet Settings"
-              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold transition group shadow-sm"
+              className="flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#121428] hover:bg-[#191B36] border border-violet-500/30 text-white text-xs font-semibold transition group shadow-md"
             >
-              <Wallet className="h-4 w-4 text-cyan-400 group-hover:scale-105 transition" />
+              <Wallet className="h-4 w-4 text-violet-400 group-hover:scale-110 transition" />
               {activeAddress ? (
                 <>
                   <span className="font-mono text-slate-200">
                     {activeAddress.slice(0, 4)}...{activeAddress.slice(-4)}
                   </span>
                   {balance !== null && (
-                    <span className="px-1.5 py-0.5 rounded bg-black/40 text-[11px] font-mono text-cyan-300 border border-white/5">
+                    <span className="px-2 py-0.5 rounded-full bg-black/50 text-[11px] font-mono text-violet-300 border border-violet-500/20">
                       {balance.toFixed(2)} SOL
                     </span>
                   )}
                   <span
                     onClick={handleCopy}
-                    className="p-1 rounded hover:bg-white/15 text-slate-400 hover:text-white transition"
+                    className="p-1 rounded-full hover:bg-white/15 text-slate-400 hover:text-white transition"
                     title="Copy Address"
                   >
                     {copied ? (
@@ -190,7 +197,7 @@ export function WalletHeader({
                   </span>
                 </>
               ) : (
-                <span className="text-cyan-300 font-bold">Connect Wallet</span>
+                <span className="text-violet-200 font-bold">Connect Wallet</span>
               )}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
@@ -199,13 +206,13 @@ export function WalletHeader({
 
         {/* Mobile Tab Switcher */}
         {onSelectTab && (
-          <div className="flex md:hidden border-t border-white/5 px-4 py-2 gap-2 bg-black/40">
+          <div className="flex md:hidden mt-2 max-w-7xl mx-auto rounded-full p-1 bg-[#0D0E1C]/90 border border-white/10 text-xs">
             <button
               type="button"
               onClick={() => onSelectTab("copilot")}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`flex-1 py-1.5 rounded-full font-semibold transition ${
                 activeTab === "copilot"
-                  ? "bg-white/10 text-white"
+                  ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-400"
               }`}
             >
@@ -214,9 +221,9 @@ export function WalletHeader({
             <button
               type="button"
               onClick={() => onSelectTab("scanner")}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`flex-1 py-1.5 rounded-full font-semibold transition ${
                 activeTab === "scanner"
-                  ? "bg-white/10 text-white"
+                  ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-400"
               }`}
             >
