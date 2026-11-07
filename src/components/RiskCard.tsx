@@ -22,6 +22,7 @@ import {
   Info,
   CheckCircle2,
   XCircle,
+  Droplets,
 } from "lucide-react";
 
 export interface RiskCardProps {
@@ -33,6 +34,8 @@ export interface RiskCardProps {
   jupiterQuote: JupiterReferenceQuote | null;
   portfolio: PortfolioSnapshot | null;
   warnings?: string[];
+  walletBalanceSol?: number | null;
+  onOpenFaucet?: () => void;
 }
 
 export function RiskCard({
@@ -44,6 +47,8 @@ export function RiskCard({
   jupiterQuote,
   portfolio,
   warnings = [],
+  walletBalanceSol = null,
+  onOpenFaucet,
 }: RiskCardProps) {
   const [copiedHash, setCopiedHash] = useState(false);
 
@@ -74,6 +79,13 @@ export function RiskCard({
   const isSafe = risk.band === "safe";
   const isCaution = risk.band === "caution";
 
+  const requiredOutflowSol = sim ? Math.abs(sim.solDeltaUser) : 0;
+  const isUnfundedWallet =
+    Boolean(sim?.isSimulatedFallback) ||
+    (walletBalanceSol !== null &&
+      requiredOutflowSol > 0 &&
+      walletBalanceSol < requiredOutflowSol);
+
   const bandColors = isSafe
     ? {
         border: "border-[#C5E3CD]",
@@ -81,8 +93,15 @@ export function RiskCard({
         testClass: "text-emerald-300",
         bar: "bg-emerald-600",
         label: "SAFE · APPROVED",
-        humanSummary:
-          "All 6 security checks passed. We dry-ran this transaction on Solana Devnet with zero errors—it is safe to sign.",
+        humanSummary: isUnfundedWallet
+          ? `All 6 policy rules passed (0/100 Risk), BUT your wallet holds ${(
+              walletBalanceSol ?? 0
+            ).toFixed(
+              4
+            )} SOL (needs ${requiredOutflowSol.toFixed(
+              4
+            )} SOL). Fund your wallet via the Faucet before broadcasting on-chain.`
+          : "All 6 security checks passed. We dry-ran this transaction on Solana Devnet with zero errors—it is safe to sign.",
         Icon: ShieldCheck,
       }
     : isCaution
@@ -169,6 +188,33 @@ export function RiskCard({
         </div>
       </div>
 
+      {/* Honest Unfunded Wallet Warning Banner */}
+      {isSafe && isUnfundedWallet && (
+        <div className="rounded-lg border border-[#F3E0A2] bg-[#FEFBF1] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="h-4 w-4 text-[#854D0E] shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-[#854D0E] block">
+                Unfunded Wallet Detected ({(walletBalanceSol ?? 0).toFixed(4)} SOL) — Instruction Preview Only
+              </span>
+              <p className="text-[#5C5852] leading-relaxed">
+                This transaction&apos;s security policy and instruction layout are valid, <strong>but you cannot transfer {requiredOutflowSol.toFixed(4)} SOL from an empty wallet on-chain</strong>. Fund your wallet below to broadcast on Solana Devnet.
+              </p>
+            </div>
+          </div>
+          {onOpenFaucet && (
+            <button
+              type="button"
+              onClick={onOpenFaucet}
+              className="px-3 py-2 rounded-md bg-[#1C1B18] hover:bg-[#33312B] text-white font-semibold text-xs transition flex items-center gap-1.5 shrink-0 whitespace-nowrap self-start sm:self-center"
+            >
+              <Droplets className="h-3.5 w-3.5 text-amber-300" />
+              <span>Fund Wallet Now</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Read-Only Portfolio Snapshot */}
       {portfolio && (
         <div className="rounded-lg border border-[#E5E0D8] bg-[#FAF9F5] p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -207,10 +253,14 @@ export function RiskCard({
             <div>
               <span className="text-xs font-bold text-[#1C1B18] flex items-center gap-1.5">
                 <Cpu className="h-3.5 w-3.5 text-[#1C1B18]" />
-                <span>Simulated Wallet Balance Change (Dry-Run Result)</span>
+                <span>
+                  {isUnfundedWallet
+                    ? "Projected Wallet Balance Change (Requires Funding)"
+                    : "Simulated Wallet Balance Change (Dry-Run Result)"}
+                </span>
               </span>
               <p className="text-[11px] text-[#5C5852]">
-                Exact tokens leaving and entering your wallet if you sign:
+                Exact tokens leaving and entering your wallet when executed:
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -279,15 +329,6 @@ export function RiskCard({
               </div>
             ) : null}
           </div>
-
-          {sim.isSimulatedFallback && (
-            <p className="text-[11px] text-[#5C5852] flex items-center gap-1.5 bg-[#FAF9F5] px-3 py-2 rounded border border-[#E5E0D8]">
-              <Info className="h-3.5 w-3.5 text-[#1C1B18] shrink-0" />
-              <span>
-                Pre-flight preview: instructions verified against live Solana Devnet RPC blockhash and account layout.
-              </span>
-            </p>
-          )}
         </div>
       )}
 

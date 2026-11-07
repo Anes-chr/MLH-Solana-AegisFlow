@@ -29,6 +29,7 @@ export interface WalletHeaderProps {
   onSelectBurner: (burner: BurnerWalletState | null) => void;
   activeTab?: AppTab;
   onSelectTab?: (tab: AppTab) => void;
+  onBalanceChange?: (balanceSol: number | null) => void;
 }
 
 const NAV_ITEMS: Array<{
@@ -41,7 +42,7 @@ const NAV_ITEMS: Array<{
   {
     id: "guide",
     step: "01",
-    label: "Start Here (Guide)",
+    label: "Guide",
     shortLabel: "01 · Guide",
     Icon: Compass,
   },
@@ -55,8 +56,8 @@ const NAV_ITEMS: Array<{
   {
     id: "sentinel",
     step: "03",
-    label: "Safety Inspector",
-    shortLabel: "03 · Safety",
+    label: "Safety Lab",
+    shortLabel: "03 · Safety Lab",
     Icon: Shield,
   },
   {
@@ -69,8 +70,8 @@ const NAV_ITEMS: Array<{
   {
     id: "docs",
     step: "05",
-    label: "How It Works",
-    shortLabel: "05 · Docs",
+    label: "Interactive Proofs",
+    shortLabel: "05 · Proofs",
     Icon: FileText,
   },
 ];
@@ -80,6 +81,7 @@ export function WalletHeader({
   onSelectBurner,
   activeTab = "guide",
   onSelectTab,
+  onBalanceChange,
 }: WalletHeaderProps) {
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,7 +103,11 @@ export function WalletHeader({
   }, []);
 
   useEffect(() => {
-    if (!activeAddress || !mounted) return;
+    if (!activeAddress || !mounted) {
+      setBalance(null);
+      onBalanceChange?.(null);
+      return;
+    }
     let isCancelled = false;
 
     const updateBalance = async () => {
@@ -112,20 +118,25 @@ export function WalletHeader({
           "confirmed"
         );
         if (!isCancelled) {
-          setBalance(lamports / LAMPORTS_PER_SOL);
+          const sol = lamports / LAMPORTS_PER_SOL;
+          setBalance(sol);
+          onBalanceChange?.(sol);
         }
       } catch {
-        if (!isCancelled) setBalance(0);
+        if (!isCancelled) {
+          setBalance(0);
+          onBalanceChange?.(0);
+        }
       }
     };
 
     updateBalance();
-    const id = setInterval(updateBalance, 10000);
+    const id = setInterval(updateBalance, 8000);
     return () => {
       isCancelled = true;
       clearInterval(id);
     };
-  }, [activeAddress, mounted, connection, publicKey]);
+  }, [activeAddress, mounted, connection, publicKey, onBalanceChange]);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -146,8 +157,8 @@ export function WalletHeader({
 
   if (!mounted) {
     return (
-      <header className="w-full bg-[#FAF9F5] border-b border-[#E5E0D8] px-4 sm:px-8 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <header className="w-full bg-[#FAF9F5] border-b border-[#E5E0D8] px-4 sm:px-6 py-2.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="h-7 w-32 bg-[#EAE6DC] rounded animate-pulse" />
           <div className="h-7 w-28 bg-[#EAE6DC] rounded animate-pulse" />
         </div>
@@ -158,14 +169,14 @@ export function WalletHeader({
   return (
     <>
       <header className="w-full bg-[#FAF9F5]/95 backdrop-blur-sm border-b border-[#E5E0D8] sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
-          {/* Brand & Numbered Navigation */}
-          <div className="flex items-center gap-5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-4 sm:px-6 py-2.5">
+          {/* Brand & Single-Line Navigation */}
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div
-              className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+              className="flex items-center gap-2 cursor-pointer group shrink-0 whitespace-nowrap"
               onClick={() => onSelectTab?.("guide")}
             >
-              <div className="h-8 w-8 rounded-md overflow-hidden shrink-0 border border-[#D6D1C7] shadow-sm">
+              <div className="h-7 w-7 rounded-md overflow-hidden shrink-0 border border-[#D6D1C7] shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/aegis-icon.svg"
@@ -173,26 +184,19 @@ export function WalletHeader({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-sm tracking-tight text-[#1C1B18]">
-                    AegisFlow
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F4F1EA] text-[#5C5852] border border-[#E5E0D8]">
-                    Devnet
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#8A857D] hidden sm:block leading-none">
-                  Solana Safety Copilot
-                </span>
-              </div>
+              <span className="font-bold text-sm tracking-tight text-[#1C1B18] whitespace-nowrap">
+                AegisFlow
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F4F1EA] text-[#5C5852] border border-[#E5E0D8] whitespace-nowrap">
+                Devnet
+              </span>
             </div>
 
-            {/* Modular Desktop Navigation Tabs */}
+            {/* Modular Desktop Navigation Tabs — Single Line Guaranteed */}
             {onSelectTab && (
               <nav
                 aria-label="Main Navigation"
-                className="hidden lg:flex items-center gap-1 border-l border-[#E5E0D8] pl-4 text-xs"
+                className="hidden lg:flex items-center gap-1 border-l border-[#E5E0D8] pl-3 text-xs shrink-0"
               >
                 {NAV_ITEMS.map((item) => {
                   const isActive = activeTab === item.id;
@@ -201,14 +205,14 @@ export function WalletHeader({
                       key={item.id}
                       type="button"
                       onClick={() => onSelectTab(item.id)}
-                      className={`px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                         isActive
                           ? "bg-[#1C1B18] text-[#FAF9F5] font-semibold shadow-sm"
                           : "text-[#5C5852] hover:text-[#1C1B18] hover:bg-[#F4F1EA] font-medium"
                       }`}
                     >
                       <span
-                        className={`font-mono text-[10px] px-1 py-0.2 rounded ${
+                        className={`font-mono text-[10px] px-1 rounded whitespace-nowrap ${
                           isActive
                             ? "bg-white/15 text-[#FAF9F5]"
                             : "bg-[#EAE6DC] text-[#5C5852]"
@@ -216,7 +220,7 @@ export function WalletHeader({
                       >
                         {item.step}
                       </span>
-                      <span>{item.label}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </button>
                   );
                 })}
@@ -224,15 +228,15 @@ export function WalletHeader({
             )}
           </div>
 
-          {/* Right Wallet & Status Controls */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right Wallet & Status Controls — All Single-Line */}
+          <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             {/* Live RPC Status */}
             <div
-              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F4F1EA] border border-[#E5E0D8] text-[11px] text-[#5C5852] font-medium"
+              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F4F1EA] border border-[#E5E0D8] text-[11px] text-[#5C5852] font-medium whitespace-nowrap shrink-0"
               title="Connected to Solana Devnet RPC"
             >
-              <Activity className="h-3 w-3 text-[#166534]" />
-              <span>Devnet Active</span>
+              <Activity className="h-3 w-3 text-[#166534] shrink-0" />
+              <span className="whitespace-nowrap">Devnet Online</span>
             </div>
 
             {/* If no wallet is active yet, provide an explicit 1-Click Test Wallet button */}
@@ -240,11 +244,11 @@ export function WalletHeader({
               <button
                 type="button"
                 onClick={handleInstantBurner}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F4F1EA] hover:bg-[#EAE6DC] border border-[#D6D1C7] text-[#1C1B18] text-xs font-semibold transition"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F4F1EA] hover:bg-[#EAE6DC] border border-[#D6D1C7] text-[#1C1B18] text-xs font-semibold transition whitespace-nowrap shrink-0"
                 title="Create a temporary Devnet wallet in 1 click without any browser extension"
               >
-                <Flame className="h-3.5 w-3.5 text-amber-700" />
-                <span>1-Click Test Wallet</span>
+                <Flame className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                <span className="whitespace-nowrap">1-Click Test Wallet</span>
               </button>
             )}
 
@@ -253,25 +257,28 @@ export function WalletHeader({
               type="button"
               onClick={() => setIsModalOpen(true)}
               aria-label="Account and Wallet Settings"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#1C1B18] hover:bg-[#33312B] text-[#FAF9F5] text-xs font-semibold transition shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1C1B18] hover:bg-[#33312B] text-[#FAF9F5] text-xs font-semibold transition shadow-sm whitespace-nowrap shrink-0"
             >
-              <Wallet className="h-3.5 w-3.5" />
+              <Wallet className="h-3.5 w-3.5 shrink-0" />
               {activeAddress ? (
                 <>
-                  <span className="text-[10px] uppercase tracking-wider text-[#CFC9BE] hidden sm:inline">
-                    {connected ? "Wallet:" : "Test Wallet:"}
-                  </span>
-                  <span className="font-mono">
+                  <span className="font-mono whitespace-nowrap">
                     {activeAddress.slice(0, 4)}...{activeAddress.slice(-4)}
                   </span>
                   {balance !== null && (
-                    <span className="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono">
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono whitespace-nowrap ${
+                        balance === 0
+                          ? "bg-amber-500/25 text-amber-200 border border-amber-400/30"
+                          : "bg-white/15 text-emerald-200"
+                      }`}
+                    >
                       {balance.toFixed(2)} SOL
                     </span>
                   )}
                   <span
                     onClick={handleCopy}
-                    className="p-0.5 rounded hover:bg-white/20 text-[#CFC9BE] hover:text-white transition"
+                    className="p-0.5 rounded hover:bg-white/20 text-[#CFC9BE] hover:text-white transition shrink-0"
                     title="Copy Your Wallet Address"
                   >
                     {copied ? (
@@ -282,9 +289,9 @@ export function WalletHeader({
                   </span>
                 </>
               ) : (
-                <span>Wallet &amp; Faucet</span>
+                <span className="whitespace-nowrap">Wallet &amp; Faucet</span>
               )}
-              <ChevronDown className="h-3 w-3 opacity-70" />
+              <ChevronDown className="h-3 w-3 opacity-70 shrink-0" />
             </button>
           </div>
         </div>
@@ -299,7 +306,7 @@ export function WalletHeader({
                   key={item.id}
                   type="button"
                   onClick={() => onSelectTab(item.id)}
-                  className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap transition ${
+                  className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap shrink-0 transition ${
                     isActive
                       ? "bg-[#1C1B18] text-[#FAF9F5] font-semibold"
                       : "text-[#5C5852] hover:text-[#1C1B18] bg-white/60 border border-[#E5E0D8]"

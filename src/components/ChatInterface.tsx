@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Keypair } from "@solana/web3.js";
 import {
   Terminal,
   ArrowRight,
@@ -9,6 +10,11 @@ import {
   CheckCircle2,
   ShieldAlert,
   Eye,
+  RefreshCw,
+  AlertTriangle,
+  Wallet,
+  Droplets,
+  Wrench,
 } from "lucide-react";
 
 export interface PresetScenario {
@@ -41,7 +47,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
     badge: "Transfer",
     expectedOutcome: "Expected: Approved ✓",
     description:
-      "Transfers 0.05 SOL to a verified Devnet recipient within your safety cap and attaches an on-chain SHA-256 audit memo.",
+      "Transfers 0.05 SOL to a freshly generated Devnet recipient within your safety cap and attaches an on-chain SHA-256 audit memo.",
     prompt: "Send 0.05 SOL to 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
     tone: "indigo",
   },
@@ -88,6 +94,11 @@ export interface ChatInterfaceProps {
   onSpendingCapChange: (cap: number) => void;
   isLoading: boolean;
   onSubmit: (overridePrompt?: string) => void;
+  walletBalanceSol?: number | null;
+  activeWalletPubkey?: string;
+  strictBalanceMode?: boolean;
+  onToggleStrictBalanceMode?: (strict: boolean) => void;
+  onOpenFaucet?: () => void;
 }
 
 const TONE_CARD_STYLES: Record<PresetScenario["tone"], string> = {
@@ -118,13 +129,80 @@ export function ChatInterface({
   onSpendingCapChange,
   isLoading,
   onSubmit,
+  walletBalanceSol = null,
+  activeWalletPubkey,
+  strictBalanceMode = true,
+  onToggleStrictBalanceMode,
+  onOpenFaucet,
 }: ChatInterfaceProps) {
+  // Interactive Builder State + Dynamic Generated Recipient Addresses
+  const [dynamicRecipient, setDynamicRecipient] = useState(
+    "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+  );
+  const [builderMode, setBuilderMode] = useState<"swap" | "transfer">("swap");
+  const [builderAmount, setBuilderAmount] = useState<number>(0.1);
+  const [builderSlippage, setBuilderSlippage] = useState<number>(50);
+  const [addressCount, setAddressCount] = useState<number>(1);
+
+  // Generate a fresh valid Solana Devnet recipient address on mount so every session uses a unique address
+  useEffect(() => {
+    try {
+      const freshPk = Keypair.generate().publicKey.toBase58();
+      setDynamicRecipient(freshPk);
+    } catch {
+      // fallback to default
+    }
+  }, []);
+
+  const handleGenerateFreshAddress = () => {
+    const freshPk = Keypair.generate().publicKey.toBase58();
+    setDynamicRecipient(freshPk);
+    setAddressCount((c) => c + 1);
+    const nextPrompt = `Send ${builderAmount} SOL to ${freshPk}`;
+    setBuilderMode("transfer");
+    onPromptChange(nextPrompt);
+  };
+
+  const applyInteractiveBuilder = (
+    mode: "swap" | "transfer",
+    amt: number,
+    slip: number,
+    recip: string
+  ) => {
+    setBuilderMode(mode);
+    setBuilderAmount(amt);
+    setBuilderSlippage(slip);
+    if (mode === "swap") {
+      onPromptChange(`Swap ${amt} SOL to USDC with ${slip}bps slippage`);
+    } else {
+      onPromptChange(`Send ${amt} SOL to ${recip}`);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isLoading && prompt.trim().length > 0) {
       e.preventDefault();
       onSubmit();
     }
   };
+
+  // Build scenarios with the live dynamic recipient address for Scenario 02
+  const activeScenarios: PresetScenario[] = PRESET_SCENARIOS.map((sc) => {
+    if (sc.id === "safe-transfer") {
+      return {
+        ...sc,
+        description: `Transfers 0.05 SOL to fresh recipient ${dynamicRecipient.slice(
+          0,
+          6
+        )}...${dynamicRecipient.slice(-4)} within your safety cap.`,
+        prompt: `Send 0.05 SOL to ${dynamicRecipient}`,
+      };
+    }
+    return sc;
+  });
+
+  const isEmptyWallet =
+    walletBalanceSol !== null && walletBalanceSol < 0.005;
 
   return (
     <section className="obsidian-card p-5 sm:p-7 space-y-6">
@@ -135,26 +213,26 @@ export function ChatInterface({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold text-[#1C1B18]">
-                Choose a Test Scenario or Type a Request
+                Interactive Intent Composer &amp; Test Scenarios
               </h2>
               <span className="badge-neutral font-mono text-[10px]">
-                Plain-English Intent
+                Live Parameter Builder
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[#5C5852] mt-1 leading-relaxed">
-              Click any guided scenario below to see how AegisFlow simulates safe transactions and blocks malicious attacks before your wallet ever signs.
+              Customize amounts, slippage, and fresh recipient addresses below, or click any guided scenario to test AegisFlow&apos;s pre-flight guardrails.
             </p>
           </div>
         </div>
 
         <div className="flex flex-col self-start sm:self-auto bg-[#F4F1EA] px-3.5 py-2 rounded-md border border-[#E5E0D8] shrink-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <Sliders className="h-3.5 w-3.5 text-[#5C5852]" />
             <label
               htmlFor="spending-cap-select"
               className="text-xs font-semibold text-[#1C1B18]"
             >
-              Max Spending Cap:
+              Safety Cap:
             </label>
             <select
               id="spending-cap-select"
@@ -169,8 +247,305 @@ export function ChatInterface({
             </select>
           </div>
           <span className="text-[10px] text-[#5C5852] mt-1">
-            Any request above this limit is automatically blocked
+            Outflows above {spendingCapSol.toFixed(2)} SOL are auto-blocked
           </span>
+        </div>
+      </div>
+
+      {/* Live Wallet Balance & Empty Wallet Honesty Banner */}
+      <div
+        className={`rounded-lg border p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs ${
+          isEmptyWallet
+            ? "bg-[#FEFBF1] border-[#F3E0A2]"
+            : "bg-[#FAF9F5] border-[#E5E0D8]"
+        }`}
+      >
+        <div className="flex items-start sm:items-center gap-2.5">
+          {isEmptyWallet ? (
+            <AlertTriangle className="h-4 w-4 text-[#854D0E] shrink-0 mt-0.5 sm:mt-0" />
+          ) : (
+            <Wallet className="h-4 w-4 text-[#166534] shrink-0 mt-0.5 sm:mt-0" />
+          )}
+          <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-bold text-[#1C1B18]">
+                Active Wallet Balance:{" "}
+                <span
+                  className={`font-mono ${
+                    isEmptyWallet ? "text-[#991B1B]" : "text-[#166534]"
+                  }`}
+                >
+                  {walletBalanceSol !== null
+                    ? `${walletBalanceSol.toFixed(4)} SOL`
+                    : activeWalletPubkey
+                    ? "Checking RPC..."
+                    : "No Wallet Selected (0.0000 SOL)"}
+                </span>
+              </span>
+              {isEmptyWallet && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FDF2F2] text-[#991B1B] border border-[#F5C6C6]">
+                  Empty Wallet (0 SOL)
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-[#5C5852]">
+              {isEmptyWallet ? (
+                <>
+                  <strong>Why can&apos;t an empty wallet transfer SOL on-chain?</strong> With{" "}
+                  <code>0.0000 SOL</code>, on-chain transfers will fail! Toggle{" "}
+                  <strong>Strict Balance Check</strong> below to block unfunded transfers immediately, or switch to{" "}
+                  <strong>Dry-Run Preview</strong> to test policy &amp; instruction math without SOL.
+                </>
+              ) : (
+                "Your Devnet wallet is funded and ready to sign and broadcast real transactions on Solana Devnet."
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {onToggleStrictBalanceMode && (
+            <div className="inline-flex rounded-md border border-[#D6D1C7] bg-white p-0.5 text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => onToggleStrictBalanceMode(true)}
+                className={`px-2.5 py-1 rounded transition whitespace-nowrap ${
+                  strictBalanceMode
+                    ? "bg-[#1C1B18] text-white"
+                    : "text-[#5C5852] hover:text-[#1C1B18]"
+                }`}
+                title="Block transfers & swaps if your wallet balance is lower than the requested SOL amount"
+              >
+                Strict Balance Check
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleStrictBalanceMode(false)}
+                className={`px-2.5 py-1 rounded transition whitespace-nowrap ${
+                  !strictBalanceMode
+                    ? "bg-[#1C1B18] text-white"
+                    : "text-[#5C5852] hover:text-[#1C1B18]"
+                }`}
+                title="Allow dry-run instruction & policy preview even when your test wallet has 0 SOL"
+              >
+                Dry-Run Preview
+              </button>
+            </div>
+          )}
+
+          {onOpenFaucet && (
+            <button
+              type="button"
+              onClick={onOpenFaucet}
+              className="px-3 py-1.5 rounded-md bg-[#1C1B18] hover:bg-[#33312B] text-white font-semibold text-xs transition flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Droplets className="h-3.5 w-3.5 text-amber-300" />
+              <span>Fund Wallet (Faucet)</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Interactive Parameter & Dynamic Address Composer */}
+      <div className="rounded-lg border border-[#E5E0D8] bg-[#FAF9F5] p-4 space-y-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-bold text-[#1C1B18] flex items-center gap-1.5">
+            <Wrench className="h-3.5 w-3.5 text-[#1C1B18]" />
+            <span>Interactive Transaction Customizer (Build Your Own Prompt Live):</span>
+          </span>
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={handleGenerateFreshAddress}
+            className="px-2.5 py-1 rounded bg-white hover:bg-[#EAE6DC] border border-[#D6D1C7] text-[11px] font-mono font-semibold text-[#1C1B18] transition flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span>Generate Fresh Recipient Address (#{addressCount})</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          {/* Operation Selector */}
+          <div className="bg-white p-3 rounded border border-[#E5E0D8] space-y-2">
+            <span className="text-[10px] font-mono uppercase font-bold text-[#5C5852] block">
+              1. Operation Type
+            </span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() =>
+                  applyInteractiveBuilder(
+                    "swap",
+                    builderAmount,
+                    builderSlippage,
+                    dynamicRecipient
+                  )
+                }
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition whitespace-nowrap ${
+                  builderMode === "swap"
+                    ? "bg-[#1C1B18] text-white border-[#1C1B18]"
+                    : "bg-[#FAF9F5] text-[#1C1B18] border-[#E5E0D8] hover:bg-[#F4F1EA]"
+                }`}
+              >
+                Swap SOL → USDC
+              </button>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() =>
+                  applyInteractiveBuilder(
+                    "transfer",
+                    builderAmount,
+                    builderSlippage,
+                    dynamicRecipient
+                  )
+                }
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition whitespace-nowrap ${
+                  builderMode === "transfer"
+                    ? "bg-[#1C1B18] text-white border-[#1C1B18]"
+                    : "bg-[#FAF9F5] text-[#1C1B18] border-[#E5E0D8] hover:bg-[#F4F1EA]"
+                }`}
+              >
+                Send SOL
+              </button>
+            </div>
+          </div>
+
+          {/* SOL Amount Slider + Quick Pills */}
+          <div className="bg-white p-3 rounded border border-[#E5E0D8] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase font-bold text-[#5C5852]">
+                2. SOL Amount
+              </span>
+              <span
+                className={`font-mono font-bold text-xs ${
+                  builderAmount > spendingCapSol
+                    ? "text-[#991B1B]"
+                    : "text-[#166534]"
+                }`}
+              >
+                {builderAmount} SOL{" "}
+                {builderAmount > spendingCapSol ? "(Exceeds Cap!)" : "(Within Cap)"}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0.05}
+              max={3.0}
+              step={0.05}
+              value={Math.min(3.0, builderAmount)}
+              onChange={(e) => {
+                const val = Number(parseFloat(e.target.value).toFixed(2));
+                applyInteractiveBuilder(
+                  builderMode,
+                  val,
+                  builderSlippage,
+                  dynamicRecipient
+                );
+              }}
+              className="w-full accent-[#1C1B18] cursor-pointer"
+            />
+            <div className="flex items-center gap-1 flex-wrap">
+              {[0.05, 0.1, 0.5, 1.5, 5.0].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() =>
+                    applyInteractiveBuilder(
+                      builderMode,
+                      amt,
+                      builderSlippage,
+                      dynamicRecipient
+                    )
+                  }
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono border transition ${
+                    builderAmount === amt
+                      ? "bg-[#1C1B18] text-white border-[#1C1B18]"
+                      : "bg-[#FAF9F5] text-[#5C5852] border-[#E5E0D8] hover:text-[#1C1B18]"
+                  }`}
+                >
+                  {amt} SOL
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamic Recipient / Slippage Control */}
+          <div className="bg-white p-3 rounded border border-[#E5E0D8] space-y-2">
+            {builderMode === "swap" ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#5C5852]">
+                    3. Max Slippage (bps)
+                  </span>
+                  <span
+                    className={`font-mono font-bold text-xs ${
+                      builderSlippage > 1000
+                        ? "text-[#991B1B]"
+                        : builderSlippage > 300
+                        ? "text-[#854D0E]"
+                        : "text-[#166534]"
+                    }`}
+                  >
+                    {builderSlippage} bps ({(builderSlippage / 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 flex-wrap pt-1">
+                  {[
+                    { bps: 10, label: "10 bps" },
+                    { bps: 50, label: "50 bps" },
+                    { bps: 100, label: "100 bps" },
+                    { bps: 400, label: "400 (Warn)" },
+                    { bps: 1200, label: "1200 (Block)" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.bps}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() =>
+                        applyInteractiveBuilder(
+                          "swap",
+                          builderAmount,
+                          opt.bps,
+                          dynamicRecipient
+                        )
+                      }
+                      className={`px-2 py-1 rounded text-[10px] font-mono border transition ${
+                        builderSlippage === opt.bps
+                          ? "bg-[#1C1B18] text-white border-[#1C1B18]"
+                          : "bg-[#FAF9F5] text-[#5C5852] border-[#E5E0D8] hover:text-[#1C1B18]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#5C5852]">
+                    3. Dynamic Recipient Keypair
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleGenerateFreshAddress}
+                    className="text-[10px] font-mono underline font-bold text-[#1C1B18]"
+                  >
+                    Randomize ↻
+                  </button>
+                </div>
+                <div className="p-1.5 rounded bg-[#FAF9F5] border border-[#E5E0D8] font-mono text-[10px] text-[#1C1B18] truncate">
+                  {dynamicRecipient}
+                </div>
+                <span className="text-[10px] text-[#5C5852] block">
+                  Generated fresh via <code>Keypair.generate()</code>
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,7 +554,7 @@ export function ChatInterface({
         <div className="flex items-center justify-between text-xs">
           <span className="font-bold text-[#1C1B18] flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-amber-700" />
-            <span>Click a Guided Scenario to Run Immediately:</span>
+            <span>Or Click a Guided Scenario to Run Immediately:</span>
           </span>
           <span className="text-[11px] font-mono text-[#5C5852]">
             5 Pre-Built Judge Tests
@@ -187,7 +562,7 @@ export function ChatInterface({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {PRESET_SCENARIOS.map((sc) => {
+          {activeScenarios.map((sc) => {
             const isSelected = prompt === sc.prompt;
             return (
               <button
@@ -208,7 +583,7 @@ export function ChatInterface({
                       {sc.stepLabel} · {sc.badge}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border whitespace-nowrap ${
                         OUTCOME_BADGE_STYLES[sc.tone]
                       }`}
                     >
@@ -241,7 +616,7 @@ export function ChatInterface({
           htmlFor="copilot-prompt-input"
           className="text-xs font-semibold text-[#1C1B18] flex items-center justify-between"
         >
-          <span>Active Prompt (edit or type your own DeFi command):</span>
+          <span>Active Prompt (live-synced with customizer or type your own):</span>
           <span className="text-[11px] font-normal text-[#5C5852]">
             Press Enter or click Simulate &amp; Guardrail
           </span>
@@ -264,7 +639,7 @@ export function ChatInterface({
             type="button"
             onClick={() => onSubmit()}
             disabled={isLoading || !prompt.trim()}
-            className="btn-editorial-primary px-6 py-3 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shrink-0 shadow-sm"
+            className="btn-editorial-primary px-6 py-3 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shrink-0 shadow-sm whitespace-nowrap"
           >
             {isLoading ? (
               <>
