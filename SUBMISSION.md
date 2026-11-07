@@ -11,7 +11,8 @@ Ready-to-paste submission fields, 30-second pitch, and timed 2-minute demo video
 - **`LIVE_DEMO_URL`**: `https://aegisflow.vercel.app` (or `https://<your-project>.vercel.app`)
   - Deploy instantly with: `npx vercel --prod`
 - **`VIDEO_URL`**: `https://youtu.be/<your-unlisted-or-public-demo-video>` (or Loom link)
-  - **Pre-Recorded 1080p Video File Ready**: `recordings/aegisflow-demo.webm` (11.86 MB).
+  - **Fast-Paced 1080p Master Video File Ready**: `recordings/aegisflow-demo.webm` (27.60 MB · 1:40 duration · 60fps).
+  - Walkthrough script and second-by-second video editing guide: [`VIDEO_SCRIPT_AND_EDITING_GUIDE.md`](./VIDEO_SCRIPT_AND_EDITING_GUIDE.md).
   - You can upload `recordings/aegisflow-demo.webm` directly to YouTube or Loom as Unlisted, then paste the URL into the submission form.
   - To re-record at any time: `npm run record:demo`
 
