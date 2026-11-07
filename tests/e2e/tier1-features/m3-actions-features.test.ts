@@ -107,11 +107,54 @@ export const m3ActionsFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify Action POST returns type: 'transaction' and transaction base64 string",
     run: async () => {
+      const { Connection, Keypair } = await import("@solana/web3.js");
+      const { saveApprovedPlan } = await import("../../../src/lib/agent/plan-store");
+      const { hashPlanPayload } = await import("../../../src/lib/solana/swap");
+      const { POST } = await import("../../../src/app/api/actions/aegis/route");
+      const origGetSlot = Connection.prototype.getSlot;
+      const origGetLatest = Connection.prototype.getLatestBlockhash;
+      Connection.prototype.getSlot = (async () => 1) as typeof Connection.prototype.getSlot;
+      Connection.prototype.getLatestBlockhash = (async () => ({
+        blockhash: "11111111111111111111111111111111",
+        lastValidBlockHeight: 1000,
+      })) as typeof Connection.prototype.getLatestBlockhash;
       try {
-        const routeMod = await import("../../../src/app/api/actions/aegis/route" as string);
-        assert(typeof routeMod.POST === "function", "POST handler must be exported");
-      } catch {
-        markPending("POST /api/actions/aegis not yet implemented (Milestone 3)");
+        const user = Keypair.generate().publicKey.toBase58();
+        const planJson = {
+          version: "aegis:v1" as const,
+          kind: "swap" as const,
+          walletPubkey: user,
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          createdAt: Date.now(),
+        };
+        const saved = saveApprovedPlan({
+          intentKind: "swap",
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          planJson,
+          planSha256: hashPlanPayload(planJson),
+          riskScore: 0,
+          riskBand: "safe",
+          explanationBullets: ["• Safe"],
+        });
+        const res = await POST(
+          new Request(`http://localhost:3000/api/actions/aegis?plan=${saved.plan.id}`, {
+            method: "POST",
+            body: JSON.stringify({ account: user }),
+          })
+        );
+        assertEquals(res.status, 200);
+        const body = await res.json();
+        assertEquals(body.type, "transaction");
+        assert(typeof body.transaction === "string" && body.transaction.length > 50, "Serialized base64 transaction returned");
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+        Connection.prototype.getLatestBlockhash = origGetLatest;
       }
     },
   },
@@ -335,9 +378,13 @@ export const m3ActionsFeatureTests: TestCase[] = [
     tier: 1,
     track: "mock",
     description: "Ensure blockhash query specifies confirmed commitment",
-    run: () => {
-      const commitment = "confirmed";
-      assertEquals(commitment, "confirmed", "Commitment must be confirmed");
+    run: async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const configSrc = fs.readFileSync(path.resolve(process.cwd(), "src/lib/solana/config.ts"), "utf-8");
+      const routeSrc = fs.readFileSync(path.resolve(process.cwd(), "src/app/api/actions/aegis/route.ts"), "utf-8");
+      assert(configSrc.includes("commitment: 'confirmed'"), "getSolanaConnection configures confirmed commitment");
+      assert(routeSrc.includes("getLatestBlockhash('confirmed')"), "Action POST queries getLatestBlockhash('confirmed')");
     },
   },
   {

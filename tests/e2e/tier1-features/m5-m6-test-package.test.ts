@@ -73,9 +73,12 @@ export const m5m6TestPackageFeatureTests: TestCase[] = [
     tier: 1,
     track: "mock",
     description: "Ensure test cases support filtering by milestone",
-    run: () => {
-      const milestones = ["G1", "M1", "M2", "M3", "M4", "M5", "M6"];
-      assert(milestones.includes("M1") && milestones.includes("M2"), "Milestones valid");
+    run: async () => {
+      const { parseArgs } = await import("../../../scripts/run-e2e-suite");
+      const parsed = parseArgs(["--milestone", "M2", "--tier", "2", "--track", "both"]);
+      assertEquals(parsed.milestone, "M2");
+      assertEquals(parsed.tier, 2);
+      assertEquals(parsed.track, "both");
     },
   },
   {

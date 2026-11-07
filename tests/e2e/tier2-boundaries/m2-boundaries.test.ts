@@ -92,9 +92,24 @@ export const m2BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Long-running inference aborted after 15s timeout",
-    run: () => {
-      const timeoutMs = 15000;
-      assert(timeoutMs === 15000, "15-second timeout safeguard defined");
+    run: async () => {
+      const { Connection } = await import("@solana/web3.js");
+      const { runAegisPipeline } = await import("../../../src/lib/agent/graph");
+      const slowConn = {
+        getBalance: () => new Promise<number>((resolve) => setTimeout(() => resolve(1_000_000_000), 200)),
+      } as unknown as InstanceType<typeof Connection>;
+      let timedOut = false;
+      try {
+        await runAegisPipeline({
+          prompt: "What is my portfolio balance?",
+          apiKey: "mock-gemini-key",
+          connection: slowConn,
+          timeoutMs: 25,
+        });
+      } catch (e: unknown) {
+        timedOut = (e as Error).message.includes("AegisFlow pipeline timed out after 25ms");
+      }
+      assertEquals(timedOut, true, "runAegisPipeline must reject when execution exceeds timeoutMs");
     },
   },
 

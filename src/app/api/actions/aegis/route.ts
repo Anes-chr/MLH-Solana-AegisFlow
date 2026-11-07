@@ -11,7 +11,6 @@ import { evaluatePolicyRules } from '@/lib/agent/policy';
 import {
   getSolanaConnection,
   KNOWN_DRAINER_ADDRESSES,
-  MEMO_PROGRAM_ID,
   TOKEN_CONFIG,
 } from '@/lib/solana/config';
 import { buildAtomicSwapTransaction, hashPlanPayload } from '@/lib/solana/swap';
@@ -56,6 +55,10 @@ export async function GET(request: Request) {
 
   if (storedPlan.riskScore >= 50) {
     return jsonError('Action refused by AegisFlow security policy.', 403);
+  }
+
+  if (hashPlanPayload(storedPlan.planJson) !== storedPlan.planSha256) {
+    return jsonError('Plan hash integrity check failed.', 403);
   }
 
   const iconUrl = `${url.origin}/aegis-icon.svg`;
@@ -117,8 +120,7 @@ export async function POST(request: Request) {
   }
 
   // Verify cryptographic plan hash integrity before constructing transaction
-  const recomputedHash = hashPlanPayload(storedPlan.planJson);
-  if (recomputedHash !== storedPlan.planSha256) {
+  if (hashPlanPayload(storedPlan.planJson) !== storedPlan.planSha256) {
     return jsonError('Plan hash integrity check failed.', 403);
   }
 
@@ -156,10 +158,10 @@ export async function POST(request: Request) {
   const effectiveSpendingCapSol =
     storedPlan.spendingCapSol ?? TOKEN_CONFIG.MAX_SOL_SWAP_DEVNET;
 
-  // Pre-verify deterministic policy against the signing account before RPC blockhash fetch
+  // Fast-fail signer/cap/slippage policy check before RPC blockhash fetch
   const preSignerPolicy = evaluatePolicyRules({
     simOk: true,
-    programs: [MEMO_PROGRAM_ID.toBase58()],
+    programs: [],
     amountSol: storedPlan.amountSol,
     expectedDUsdc: storedPlan.expectedDUsdc,
     pythPriceUsd: storedPlan.pythPriceUsd,

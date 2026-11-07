@@ -182,10 +182,61 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Extra properties in payload do not contaminate transaction building",
-    run: () => {
-      const payload = { account: "9WzDXw...", extraEvilPayload: "malicious" };
-      const { account } = payload;
-      assertEquals(account, "9WzDXw...");
+    run: async () => {
+      const { Connection, Keypair, Transaction, SystemInstruction } = await import("@solana/web3.js");
+      const { saveApprovedPlan } = await import("../../../src/lib/agent/plan-store");
+      const { hashPlanPayload } = await import("../../../src/lib/solana/swap");
+      const { POST } = await import("../../../src/app/api/actions/aegis/route");
+      const origGetSlot = Connection.prototype.getSlot;
+      const origGetLatest = Connection.prototype.getLatestBlockhash;
+      Connection.prototype.getSlot = (async () => 1) as typeof Connection.prototype.getSlot;
+      Connection.prototype.getLatestBlockhash = (async () => ({
+        blockhash: "11111111111111111111111111111111",
+        lastValidBlockHeight: 1000,
+      })) as typeof Connection.prototype.getLatestBlockhash;
+      try {
+        const user = Keypair.generate().publicKey;
+        const planJson = {
+          version: "aegis:v1" as const,
+          kind: "swap" as const,
+          walletPubkey: user.toBase58(),
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          createdAt: Date.now(),
+        };
+        const saved = saveApprovedPlan({
+          intentKind: "swap",
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          planJson,
+          planSha256: hashPlanPayload(planJson),
+          riskScore: 0,
+          riskBand: "safe",
+          explanationBullets: ["• Safe"],
+        });
+        const res = await POST(
+          new Request(`http://localhost:3000/api/actions/aegis?plan=${saved.plan.id}`, {
+            method: "POST",
+            body: JSON.stringify({
+              account: user.toBase58(),
+              amountSol: 999,
+              extraEvilPayload: "malicious",
+            }),
+          })
+        );
+        assertEquals(res.status, 200);
+        const body = await res.json();
+        const tx = Transaction.from(Buffer.from(body.transaction, "base64"));
+        const decodedTransfer = SystemInstruction.decodeTransfer(tx.instructions[1]);
+        assertEquals(Number(decodedTransfer.lamports), 100_000_000, "POST ignores injected amountSol:999 and uses storedPlan 0.1 SOL");
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+        Connection.prototype.getLatestBlockhash = origGetLatest;
+      }
     },
   },
 
@@ -198,9 +249,15 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "CORS headers allow custom Dialect and Solana client headers",
-    run: () => {
-      const allowedHeaders = ACTIONS_CORS_HEADERS["Access-Control-Allow-Headers"];
-      assert(allowedHeaders.length > 0, "Allow-Headers must be configured");
+    run: async () => {
+      const { OPTIONS } = await import("../../../src/app/api/actions/aegis/route");
+      const res = await OPTIONS();
+      const allowedHeaders = res.headers.get("Access-Control-Allow-Headers") || "";
+      assert(
+        allowedHeaders.includes("Content-Type") && allowedHeaders.includes("Authorization"),
+        "OPTIONS response headers must include Access-Control-Allow-Headers"
+      );
+      assert(Boolean(res.headers.get("X-Action-Version")), "OPTIONS response must include X-Action-Version header");
     },
   },
   {
@@ -211,8 +268,13 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Ensure Access-Control-Allow-Origin is wildcard * for Dial.to rendering",
-    run: () => {
-      assertEquals(ACTIONS_CORS_HEADERS["Access-Control-Allow-Origin"], "*");
+    run: async () => {
+      const { OPTIONS: aegisOptions } = await import("../../../src/app/api/actions/aegis/route");
+      const { OPTIONS: discoveryOptions } = await import("../../../src/app/actions.json/route");
+      const res1 = await aegisOptions();
+      const res2 = await discoveryOptions();
+      assertEquals(res1.headers.get("Access-Control-Allow-Origin"), "*");
+      assertEquals(res2.headers.get("Access-Control-Allow-Origin"), "*");
     },
   },
   {
@@ -223,11 +285,14 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Action URLs with special characters encode safely for Dial.to links",
-    run: () => {
-      const urlWithParams = "https://example.com/api/actions/aegis?plan=123&track=devnet";
-      const encoded = encodeURIComponent(urlWithParams);
-      assert(!encoded.includes(" "), "URL encoded cleanly");
-      assertEquals(decodeURIComponent(encoded), urlWithParams);
+    run: async () => {
+      const { buildDialBlinkUrl } = await import("../../../src/components/ActionCard");
+      const complexUrl = "https://example.com/api/actions/aegis?plan=plan_123&token=abc.def_456";
+      const dialUrl = buildDialBlinkUrl(complexUrl);
+      assert(
+        dialUrl === `https://dial.to/?action=solana-action:${encodeURIComponent(complexUrl)}&cluster=devnet`,
+        "buildDialBlinkUrl safely URL-encodes multi-parameter Action URLs"
+      );
     },
   },
   {
@@ -238,11 +303,14 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Routing rules match both /aegis and /aegis/ paths",
-    run: () => {
-      const pathPattern = "^/aegis/?$";
-      const regex = new RegExp(pathPattern);
-      assert(regex.test("/aegis"), "Matches without slash");
-      assert(regex.test("/aegis/"), "Matches with slash");
+    run: async () => {
+      const { GET } = await import("../../../src/app/actions.json/route");
+      const res = await GET();
+      const data = await res.json();
+      const hasAegisRule = data.rules.some((r: { pathPattern: string; apiPath: string }) =>
+        r.pathPattern.startsWith("/aegis") && r.apiPath.startsWith("/api/actions/aegis")
+      );
+      assert(hasAegisRule, "/actions.json must map /aegis* to /api/actions/aegis*");
     },
   },
   {
@@ -253,9 +321,14 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Exporting OPTIONS handler prevents Next.js 405 error on CORS pre-flight",
-    run: () => {
-      const supportedMethods = ["GET", "POST", "OPTIONS"];
-      assert(supportedMethods.includes("OPTIONS"), "OPTIONS must be supported");
+    run: async () => {
+      const aegisRoute = await import("../../../src/app/api/actions/aegis/route");
+      const discoveryRoute = await import("../../../src/app/actions.json/route");
+      assertEquals(typeof aegisRoute.GET, "function");
+      assertEquals(typeof aegisRoute.POST, "function");
+      assertEquals(typeof aegisRoute.OPTIONS, "function");
+      assertEquals(typeof discoveryRoute.GET, "function");
+      assertEquals(typeof discoveryRoute.OPTIONS, "function");
     },
   },
 
@@ -268,9 +341,54 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Blockhash fetched with confirmed commitment for fresh validity window",
-    run: () => {
-      const commitment = "confirmed";
-      assertEquals(commitment, "confirmed");
+    run: async () => {
+      const { Connection, Keypair } = await import("@solana/web3.js");
+      const { saveApprovedPlan } = await import("../../../src/lib/agent/plan-store");
+      const { hashPlanPayload } = await import("../../../src/lib/solana/swap");
+      const { POST } = await import("../../../src/app/api/actions/aegis/route");
+      let observedCommitment: string | undefined;
+      const origGetSlot = Connection.prototype.getSlot;
+      const origGetLatest = Connection.prototype.getLatestBlockhash;
+      Connection.prototype.getSlot = (async () => 1) as typeof Connection.prototype.getSlot;
+      Connection.prototype.getLatestBlockhash = (async (commitment?: unknown) => {
+        observedCommitment = String(commitment);
+        return { blockhash: "11111111111111111111111111111111", lastValidBlockHeight: 1000 };
+      }) as typeof Connection.prototype.getLatestBlockhash;
+      try {
+        const user = Keypair.generate().publicKey.toBase58();
+        const planJson = {
+          version: "aegis:v1" as const,
+          kind: "swap" as const,
+          walletPubkey: user,
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          createdAt: Date.now(),
+        };
+        const saved = saveApprovedPlan({
+          intentKind: "swap",
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          planJson,
+          planSha256: hashPlanPayload(planJson),
+          riskScore: 0,
+          riskBand: "safe",
+          explanationBullets: ["• Safe"],
+        });
+        await POST(
+          new Request(`http://localhost:3000/api/actions/aegis?plan=${saved.plan.id}`, {
+            method: "POST",
+            body: JSON.stringify({ account: user }),
+          })
+        );
+        assertEquals(observedCommitment, "confirmed", "POST /api/actions/aegis must query getLatestBlockhash('confirmed')");
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+        Connection.prototype.getLatestBlockhash = origGetLatest;
+      }
     },
   },
   {
@@ -281,10 +399,55 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Wallet adapter catches expired blockhash on broadcast and prompts retry",
-    run: () => {
-      const errorMessage = "Transaction simulation failed: Blockhash not found";
-      const isExpired = errorMessage.includes("Blockhash not found");
-      assert(isExpired, "Expired blockhash detected");
+    run: async () => {
+      const { Connection, Keypair, Transaction } = await import("@solana/web3.js");
+      const { saveApprovedPlan } = await import("../../../src/lib/agent/plan-store");
+      const { hashPlanPayload } = await import("../../../src/lib/solana/swap");
+      const { POST } = await import("../../../src/app/api/actions/aegis/route");
+      const bh1 = Keypair.generate().publicKey.toBase58();
+      const bh2 = Keypair.generate().publicKey.toBase58();
+      let callCount = 0;
+      const origGetSlot = Connection.prototype.getSlot;
+      const origGetLatest = Connection.prototype.getLatestBlockhash;
+      Connection.prototype.getSlot = (async () => 1) as typeof Connection.prototype.getSlot;
+      Connection.prototype.getLatestBlockhash = (async () => ({
+        blockhash: ++callCount === 1 ? bh1 : bh2,
+        lastValidBlockHeight: 1000 + callCount,
+      })) as typeof Connection.prototype.getLatestBlockhash;
+      try {
+        const user = Keypair.generate().publicKey.toBase58();
+        const planJson = {
+          version: "aegis:v1" as const,
+          kind: "swap" as const,
+          walletPubkey: user,
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          createdAt: Date.now(),
+        };
+        const saved = saveApprovedPlan({
+          intentKind: "swap",
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          planJson,
+          planSha256: hashPlanPayload(planJson),
+          riskScore: 0,
+          riskBand: "safe",
+          explanationBullets: ["• Safe"],
+        });
+        const url = `http://localhost:3000/api/actions/aegis?plan=${saved.plan.id}`;
+        const res1 = await (await POST(new Request(url, { method: "POST", body: JSON.stringify({ account: user }) }))).json();
+        const res2 = await (await POST(new Request(url, { method: "POST", body: JSON.stringify({ account: user }) }))).json();
+        const tx1 = Transaction.from(Buffer.from(res1.transaction, "base64"));
+        const tx2 = Transaction.from(Buffer.from(res2.transaction, "base64"));
+        assert(tx1.recentBlockhash !== tx2.recentBlockhash, "Subsequent POST after user delay receives a brand-new blockhash");
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+        Connection.prototype.getLatestBlockhash = origGetLatest;
+      }
     },
   },
   {
@@ -295,10 +458,25 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Fallback RPC endpoint automatically queried when primary fails",
-    run: () => {
-      const primaryFailed = true;
-      const fallbackAvailable = true;
-      assert(primaryFailed && fallbackAvailable, "Fallback engages");
+    run: async () => {
+      const { Connection } = await import("@solana/web3.js");
+      const { getSolanaConnection } = await import("../../../src/lib/solana/config");
+      let attempts = 0;
+      const origGetSlot = Connection.prototype.getSlot;
+      Connection.prototype.getSlot = (async () => {
+        attempts++;
+        if (attempts === 1) {
+          throw new Error("Primary RPC 503 Unavailable");
+        }
+        return 123456;
+      }) as typeof Connection.prototype.getSlot;
+      try {
+        const conn = await getSolanaConnection();
+        assert(attempts >= 2, "getSolanaConnection must fail over to secondary candidate when primary RPC throws");
+        assert(Boolean(conn.rpcEndpoint), "Fallback RPC connection established");
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+      }
     },
   },
   {
@@ -337,9 +515,56 @@ export const m3BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Blockhash fetch completes within 500ms budget",
-    run: () => {
-      const budgetMs = 500;
-      assert(budgetMs === 500, "500ms budget defined");
+    run: async () => {
+      const { Connection, Keypair } = await import("@solana/web3.js");
+      const { saveApprovedPlan } = await import("../../../src/lib/agent/plan-store");
+      const { hashPlanPayload } = await import("../../../src/lib/solana/swap");
+      const { POST } = await import("../../../src/app/api/actions/aegis/route");
+      const origGetSlot = Connection.prototype.getSlot;
+      const origGetLatest = Connection.prototype.getLatestBlockhash;
+      Connection.prototype.getSlot = (async () => 1) as typeof Connection.prototype.getSlot;
+      Connection.prototype.getLatestBlockhash = (async () => ({
+        blockhash: "11111111111111111111111111111111",
+        lastValidBlockHeight: 1000,
+      })) as typeof Connection.prototype.getLatestBlockhash;
+      try {
+        const user = Keypair.generate().publicKey.toBase58();
+        const planJson = {
+          version: "aegis:v1" as const,
+          kind: "swap" as const,
+          walletPubkey: user,
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          createdAt: Date.now(),
+        };
+        const saved = saveApprovedPlan({
+          intentKind: "swap",
+          amountSol: 0.1,
+          expectedDUsdc: 20,
+          pythPriceUsd: 200,
+          maxSlippageBps: 50,
+          planJson,
+          planSha256: hashPlanPayload(planJson),
+          riskScore: 0,
+          riskBand: "safe",
+          explanationBullets: ["• Safe"],
+        });
+        const t0 = Date.now();
+        const res = await POST(
+          new Request(`http://localhost:3000/api/actions/aegis?plan=${saved.plan.id}`, {
+            method: "POST",
+            body: JSON.stringify({ account: user }),
+          })
+        );
+        const elapsed = Date.now() - t0;
+        assertEquals(res.status, 200);
+        assert(elapsed < 500, `POST handler assembly latency (${elapsed}ms) must be under 500ms budget`);
+      } finally {
+        Connection.prototype.getSlot = origGetSlot;
+        Connection.prototype.getLatestBlockhash = origGetLatest;
+      }
     },
   },
 ];

@@ -102,9 +102,9 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     tier: 1,
     track: "mock",
     description: "Verify stages: Planner, Scout, Builder, Sentinel, Gate",
-    run: () => {
-      const expectedStages = ["Planner", "Scout", "Builder", "Sentinel", "Gate"];
-      assertEquals(expectedStages.length, 5, "Timeline must feature 5 stages");
+    run: async () => {
+      const { PIPELINE_STAGES } = await import("../../../src/lib/agent/graph");
+      assertEquals(PIPELINE_STAGES.join(","), "planner,scout,builder,sentinel,gate", "PIPELINE_STAGES must define exact 5 stages");
     },
   },
   {
@@ -116,8 +116,13 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Ensure active stage indicates current execution focus",
     run: () => {
-      const stageState = { current: "Scout", status: "running" };
-      assertEquals(stageState.current, "Scout");
+      const timelineSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/AgentTimeline.tsx"), "utf-8");
+      assert(
+        timelineSrc.includes("if (isLoading && !step)") &&
+          timelineSrc.includes("animate-pulse") &&
+          timelineSrc.includes('badgeText = "ACTIVE"'),
+        "AgentTimeline highlights active running stage with pulse indicator"
+      );
     },
   },
   {
@@ -129,8 +134,11 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Ensure completed stage records duration",
     run: () => {
-      const stage = { name: "Planner", durationMs: 142, status: "completed" };
-      assert(stage.durationMs > 0, "Duration must be positive");
+      const timelineSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/AgentTimeline.tsx"), "utf-8");
+      assert(
+        timelineSrc.includes("step.durationMs") && timelineSrc.includes("ms"),
+        "AgentTimeline renders per-stage durationMs telemetry badge"
+      );
     },
   },
   {
@@ -142,8 +150,11 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify blocked stage reflects failure styling",
     run: () => {
-      const stage = { name: "Gate", status: "blocked" };
-      assertEquals(stage.status, "blocked");
+      const timelineSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/AgentTimeline.tsx"), "utf-8");
+      assert(
+        timelineSrc.includes('status === "blocked"') && timelineSrc.includes("rose-500"),
+        "AgentTimeline styles blocked stages with rose alert tokens"
+      );
     },
   },
   {
@@ -155,11 +166,8 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify AgentTimeline component exists in components directory",
     run: async () => {
-      try {
-        await import("../../../src/components/AgentTimeline" as string);
-      } catch {
-        markPending("src/components/AgentTimeline.tsx pending Milestone 4");
-      }
+      const mod = await import("../../../src/components/AgentTimeline");
+      assertEquals(typeof mod.AgentTimeline, "function", "AgentTimeline component exported");
     },
   },
 
@@ -187,9 +195,17 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     tier: 1,
     track: "mock",
     description: "Verify findings list structures rule check labels and status",
-    run: () => {
-      const finding = { check: "Spending Cap", passed: true, detail: "0.1 SOL <= 1.0 SOL cap" };
-      assert(finding.passed, "Finding must be structured boolean");
+    run: async () => {
+      const { evaluatePolicyRules } = await import("../../../src/lib/agent/policy");
+      const riskSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/RiskCard.tsx"), "utf-8");
+      const res = evaluatePolicyRules({
+        simOk: true,
+        programs: ["11111111111111111111111111111111"],
+        amountSol: 0.1,
+        promptText: "swap 0.1 SOL",
+      });
+      assertEquals(res.findings.length, 6, "evaluatePolicyRules produces 6 structured findings");
+      assert(riskSrc.includes("risk.findings.map"), "RiskCard renders all evaluated findings");
     },
   },
   {
@@ -201,10 +217,11 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify deltas display negative for outflow and positive for inflow",
     run: () => {
-      const solDelta = -0.10005;
-      const dUsdcDelta = 20.543;
-      assert(solDelta < 0, "Outflow must be negative");
-      assert(dUsdcDelta > 0, "Inflow must be positive");
+      const riskSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/RiskCard.tsx"), "utf-8");
+      assert(
+        riskSrc.includes("sim.solDeltaUser") && riskSrc.includes("sim.dUsdcDeltaUser"),
+        "RiskCard binds simulated User SOL and dUSDC balance deltas"
+      );
     },
   },
   {
@@ -216,9 +233,11 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify compute units badge displays CU value",
     run: () => {
-      const units = 42350;
-      const badgeText = `${units.toLocaleString()} CU`;
-      assertEquals(badgeText, "42,350 CU");
+      const riskSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/RiskCard.tsx"), "utf-8");
+      assert(
+        riskSrc.includes("sim.unitsConsumed.toLocaleString()} CU"),
+        "RiskCard formats compute units with toLocaleString() CU"
+      );
     },
   },
   {
@@ -230,9 +249,11 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify plan hash badge truncates to readable format",
     run: () => {
-      const fullHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-      const truncated = `${fullHash.slice(0, 8)}...${fullHash.slice(-6)}`;
-      assertEquals(truncated, "e3b0c442...52b855");
+      const riskSrc = fs.readFileSync(path.resolve(process.cwd(), "src/components/RiskCard.tsx"), "utf-8");
+      assert(
+        riskSrc.includes("aegis:v1:{plan.sha256.slice(0, 12)}...{plan.sha256.slice(-10)}"),
+        "RiskCard formats truncated aegis:v1:<sha256> Memo anchor with copy button"
+      );
     },
   },
 
@@ -246,11 +267,8 @@ export const m4UiStretchesFeatureTests: TestCase[] = [
     track: "mock",
     description: "Verify ActionCard component exists in components directory",
     run: async () => {
-      try {
-        await import("../../../src/components/ActionCard" as string);
-      } catch {
-        markPending("src/components/ActionCard.tsx pending Milestone 4");
-      }
+      const mod = await import("../../../src/components/ActionCard");
+      assertEquals(typeof mod.ActionCard, "function", "ActionCard component exported");
     },
   },
   {

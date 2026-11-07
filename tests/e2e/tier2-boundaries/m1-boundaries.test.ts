@@ -24,11 +24,18 @@ export const m1BoundaryTests: TestCase[] = [
     track: "mock",
     description: "Verify system gracefully handles Pyth Hermes server error without crashing",
     run: async () => {
+      const { getLiveSolUsdPrice } = await import("../../../src/lib/solana/pyth");
+      const { PYTH_CONFIG } = await import("../../../src/lib/solana/config");
+      const origFetch = global.fetch;
+      global.fetch = (async () =>
+        new Response("Internal Server Error", { status: 500, statusText: "Internal Server Error" })) as typeof fetch;
       try {
-        const pythMod = await import("../../../src/lib/solana/pyth" as string);
-        assert(typeof pythMod.getLiveSolUsdPrice === "function", "getLiveSolUsdPrice exported");
-      } catch {
-        markPending("Pyth module error handling pending M1 implementation");
+        const res = await getLiveSolUsdPrice();
+        assertEquals(res.isFallback, true, "HTTP 500 across oracle tiers must trigger deterministic fallback");
+        assertEquals(res.source, "deterministic_fallback");
+        assertEquals(res.priceUsd, PYTH_CONFIG.DEFAULT_FALLBACK_PRICE_USD);
+      } finally {
+        global.fetch = origFetch;
       }
     },
   },
@@ -107,10 +114,25 @@ export const m1BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Verify fetch signals support timeout abortion cleanly",
-    run: () => {
-      const controller = new AbortController();
-      controller.abort();
-      assertEquals(controller.signal.aborted, true, "Signal should be aborted");
+    run: async () => {
+      const { getLiveSolUsdPrice } = await import("../../../src/lib/solana/pyth");
+      const origFetch = global.fetch;
+      let sawAbortSignal = false;
+      global.fetch = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.signal) {
+          sawAbortSignal = true;
+        }
+        const abortErr = new Error("The operation was aborted");
+        abortErr.name = "AbortError";
+        throw abortErr;
+      }) as typeof fetch;
+      try {
+        const res = await getLiveSolUsdPrice();
+        assert(sawAbortSignal, "getLiveSolUsdPrice must pass AbortController signal to fetch");
+        assertEquals(res.isFallback, true, "Aborted fetch falls back cleanly without hanging");
+      } finally {
+        global.fetch = origFetch;
+      }
     },
   },
 
@@ -449,17 +471,10 @@ export const m1BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Reject malformed recipient address string",
-    run: () => {
-      const malformedAddr = "invalid-base58-string!@#$";
-      let isValid = false;
-      try {
-        const { PublicKey } = require("@solana/web3.js");
-        new PublicKey(malformedAddr);
-        isValid = true;
-      } catch {
-        isValid = false;
-      }
-      assertEquals(isValid, false, "Malformed address must be rejected");
+    run: async () => {
+      const { parseIntentDeterministic } = await import("../../../src/lib/agent/graph");
+      const intent = parseIntentDeterministic("Send 0.05 SOL to invalid-base58-string!@#$");
+      assertEquals(intent.kind, "unsupported", "Planner rejects malformed base58 destination");
     },
   },
   {
@@ -504,9 +519,23 @@ export const m1BoundaryTests: TestCase[] = [
     tier: 2,
     track: "mock",
     description: "Allow transfers to valid on-chain PDAs",
-    run: () => {
-      const ata = FIXTURES.accounts.dUsdcMint;
-      assert(ata.toBase58().length > 30, "PDA valid as recipient");
+    run: async () => {
+      const { Keypair, Connection, PublicKey, SystemProgram } = await import("@solana/web3.js");
+      const { buildSolTransferTransaction } = await import("../../../src/lib/solana/transfer");
+      const [pdaRecipient] = PublicKey.findProgramAddressSync(
+        [Buffer.from("aegis-escrow"), Keypair.generate().publicKey.toBuffer()],
+        SystemProgram.programId
+      );
+      assertEquals(PublicKey.isOnCurve(pdaRecipient.toBytes()), false, "Derived PDA must be off-curve");
+      const built = await buildSolTransferTransaction({
+        connection: new Connection("https://api.devnet.solana.com"),
+        userPubkey: Keypair.generate().publicKey,
+        recipientPubkey: pdaRecipient,
+        amountSol: 0.05,
+        planHashHex: "a".repeat(64),
+        recentBlockhash: "11111111111111111111111111111111",
+      });
+      assertEquals(built.transaction.instructions.length, 2, "buildSolTransferTransaction accepts off-curve PDA recipient");
     },
   },
 
