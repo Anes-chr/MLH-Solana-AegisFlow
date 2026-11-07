@@ -11,13 +11,17 @@ import {
   Copy,
   Check,
   ChevronDown,
+  Shield,
+  Search,
+  Cpu,
+  FileText,
 } from "lucide-react";
 
 export interface WalletHeaderProps {
   burner: BurnerWalletState | null;
   onSelectBurner: (burner: BurnerWalletState | null) => void;
-  activeTab?: "copilot" | "scanner";
-  onSelectTab?: (tab: "copilot" | "scanner") => void;
+  activeTab?: "copilot" | "sentinel" | "scanner" | "docs";
+  onSelectTab?: (tab: "copilot" | "sentinel" | "scanner" | "docs") => void;
 }
 
 export function WalletHeader({
@@ -85,10 +89,10 @@ export function WalletHeader({
 
   if (!mounted) {
     return (
-      <header className="w-full sticky top-3 z-40 px-3 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 px-4 py-3 rounded-full bg-[#0E0F1E]/80 backdrop-blur-xl border border-white/10 shadow-lg">
-          <div className="h-8 w-32 bg-white/5 rounded-full animate-pulse" />
-          <div className="h-8 w-40 bg-white/5 rounded-full animate-pulse" />
+      <header className="w-full bg-[#FBFBFA] border-b border-[#E7E4DC] px-4 sm:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="h-7 w-32 bg-[#EFECE6] rounded animate-pulse" />
+          <div className="h-7 w-28 bg-[#EFECE6] rounded animate-pulse" />
         </div>
       </header>
     );
@@ -96,15 +100,15 @@ export function WalletHeader({
 
   return (
     <>
-      <header className="w-full sticky top-3 z-40 px-3 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 px-3.5 sm:px-5 py-2.5 rounded-full bg-[#0D0E1C]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_-4px_rgba(0,0,0,0.6),0_0_24px_-6px_rgba(105,40,234,0.2)]">
-          {/* Left: Brand Emblem + Wordmark */}
-          <div className="flex items-center gap-5 sm:gap-7">
+      <header className="w-full bg-[#FBFBFA]/95 backdrop-blur-sm border-b border-[#E7E4DC] sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 py-2.5">
+          {/* Brand */}
+          <div className="flex items-center gap-6">
             <div
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-2.5 cursor-pointer group"
               onClick={() => onSelectTab?.("copilot")}
             >
-              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-md group-hover:scale-105 transition-transform duration-200">
+              <div className="h-7 w-7 rounded-md overflow-hidden shrink-0 border border-[#DDD9CE]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/aegis-icon.svg"
@@ -112,58 +116,82 @@ export function WalletHeader({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-base tracking-tight text-white group-hover:text-violet-200 transition-colors">
-                    AegisFlow
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                    DEVNET
-                  </span>
-                </div>
-                <span className="text-[11px] text-slate-400 block -mt-0.5 font-medium">
-                  Autonomous DeFi Guardrails
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm tracking-tight text-[#1C1B1A]">
+                  AegisFlow
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F3F1EC] text-[#66635D] border border-[#E7E4DC]">
+                  Devnet
                 </span>
               </div>
             </div>
 
-            {/* Desktop Capsule Tabs */}
+            {/* Modular Desktop Navigation Tabs */}
             {onSelectTab && (
-              <nav className="hidden md:flex items-center gap-1 rounded-full bg-black/40 p-1 border border-white/5 text-xs font-semibold">
+              <nav className="hidden md:flex items-center gap-1 border-l border-[#E7E4DC] pl-5 text-xs">
                 <button
                   type="button"
                   onClick={() => onSelectTab("copilot")}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
                     activeTab === "copilot"
-                      ? "bg-violet-600 text-white shadow-md shadow-violet-600/30 font-bold"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-[#1C1B1A] text-white font-medium"
+                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
                   }`}
                 >
-                  Copilot &amp; Sentinel
+                  <Cpu className="h-3.5 w-3.5" />
+                  <span>Copilot</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => onSelectTab("sentinel")}
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+                    activeTab === "sentinel"
+                      ? "bg-[#1C1B1A] text-white font-medium"
+                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
+                  }`}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Sentinel Cockpit</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => onSelectTab("scanner")}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
                     activeTab === "scanner"
-                      ? "bg-violet-600 text-white shadow-md shadow-violet-600/30 font-bold"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-[#1C1B1A] text-white font-medium"
+                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
                   }`}
                 >
-                  Token Safety Scanner
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Token Auditor</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onSelectTab("docs")}
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+                    activeTab === "docs"
+                      ? "bg-[#1C1B1A] text-white font-medium"
+                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
+                  }`}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Architecture &amp; Proofs</span>
                 </button>
               </nav>
             )}
           </div>
 
-          {/* Right: Network Status + Account Pill */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Live Helius Devnet Status */}
+          {/* Right Controls */}
+          <div className="flex items-center gap-2.5">
+            {/* Live Helius RPC Status */}
             <div
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-400"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F3F1EC] border border-[#E7E4DC] text-[11px] text-[#4A4742]"
               title="Connected to Helius Devnet RPC"
             >
-              <Activity className="h-3.5 w-3.5 animate-pulse text-emerald-400" />
+              <Activity className="h-3 w-3 text-emerald-600" />
               <span>Helius Devnet</span>
             </div>
 
@@ -171,22 +199,22 @@ export function WalletHeader({
             <button
               onClick={() => setIsModalOpen(true)}
               aria-label="Account and Wallet Settings"
-              className="flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#121428] hover:bg-[#191B36] border border-violet-500/30 text-white text-xs font-semibold transition group shadow-md"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#1C1B1A] hover:bg-[#33312E] text-white text-xs font-medium transition shadow-sm"
             >
-              <Wallet className="h-4 w-4 text-violet-400 group-hover:scale-110 transition" />
+              <Wallet className="h-3.5 w-3.5" />
               {activeAddress ? (
                 <>
-                  <span className="font-mono text-slate-200">
+                  <span className="font-mono">
                     {activeAddress.slice(0, 4)}...{activeAddress.slice(-4)}
                   </span>
                   {balance !== null && (
-                    <span className="px-2 py-0.5 rounded-full bg-black/50 text-[11px] font-mono text-violet-300 border border-violet-500/20">
+                    <span className="px-1.5 py-0.2 rounded bg-white/20 text-[10px] font-mono">
                       {balance.toFixed(2)} SOL
                     </span>
                   )}
                   <span
                     onClick={handleCopy}
-                    className="p-1 rounded-full hover:bg-white/15 text-slate-400 hover:text-white transition"
+                    className="p-0.5 rounded hover:bg-white/20 text-slate-300 hover:text-white transition"
                     title="Copy Address"
                   >
                     {copied ? (
@@ -197,37 +225,59 @@ export function WalletHeader({
                   </span>
                 </>
               ) : (
-                <span className="text-violet-200 font-bold">Connect Wallet</span>
+                <span>Connect Wallet</span>
               )}
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+              <ChevronDown className="h-3 w-3 opacity-60" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Tab Switcher */}
+        {/* Mobile Sub-Navigation Bar */}
         {onSelectTab && (
-          <div className="flex md:hidden mt-2 max-w-7xl mx-auto rounded-full p-1 bg-[#0D0E1C]/90 border border-white/10 text-xs">
+          <div className="flex md:hidden border-t border-[#E7E4DC] px-4 py-1.5 gap-1 bg-[#F5F3ED] overflow-x-auto">
             <button
               type="button"
               onClick={() => onSelectTab("copilot")}
-              className={`flex-1 py-1.5 rounded-full font-semibold transition ${
+              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
                 activeTab === "copilot"
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-slate-400"
+                  ? "bg-[#1C1B1A] text-white font-medium"
+                  : "text-[#66635D]"
               }`}
             >
-              Copilot &amp; Sentinel
+              Copilot
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab("sentinel")}
+              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
+                activeTab === "sentinel"
+                  ? "bg-[#1C1B1A] text-white font-medium"
+                  : "text-[#66635D]"
+              }`}
+            >
+              Sentinel
             </button>
             <button
               type="button"
               onClick={() => onSelectTab("scanner")}
-              className={`flex-1 py-1.5 rounded-full font-semibold transition ${
+              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
                 activeTab === "scanner"
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-slate-400"
+                  ? "bg-[#1C1B1A] text-white font-medium"
+                  : "text-[#66635D]"
               }`}
             >
-              Token Safety Scanner
+              Token Auditor
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab("docs")}
+              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
+                activeTab === "docs"
+                  ? "bg-[#1C1B1A] text-white font-medium"
+                  : "text-[#66635D]"
+              }`}
+            >
+              Proofs
             </button>
           </div>
         )}

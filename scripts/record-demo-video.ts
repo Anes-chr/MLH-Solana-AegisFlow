@@ -105,7 +105,7 @@ async function main() {
   const masterVideoStart = Date.now();
   console.log(`[Demo Timer] Master recording clock initiated at exact video frame 0:00.`);
 
-  // Floating presentation HUD matching the Lavender-Violet Design System
+  // Clean architectural floating HUD (matching Light Beige / Editorial palette)
   const setBanner = async (
     title: string,
     subtitle: string,
@@ -124,36 +124,35 @@ async function main() {
           el.style.transform = "translateX(-50%)";
           el.style.zIndex = "999999";
           el.style.pointerEvents = "none";
-          el.style.backgroundColor = "rgba(13, 14, 28, 0.94)";
-          el.style.border = "1px solid rgba(139, 92, 246, 0.35)";
-          el.style.borderRadius = "9999px";
-          el.style.padding = "10px 24px";
-          el.style.backdropFilter = "blur(24px)";
-          (el.style as unknown as Record<string, string>)["webkitBackdropFilter"] = "blur(24px)";
-          el.style.boxShadow =
-            "0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(105, 40, 234, 0.25)";
+          el.style.backgroundColor = "rgba(251, 251, 250, 0.96)";
+          el.style.border = "1px solid #DDD9CE";
+          el.style.borderRadius = "8px";
+          el.style.padding = "10px 20px";
+          el.style.backdropFilter = "blur(16px)";
+          (el.style as unknown as Record<string, string>)["webkitBackdropFilter"] = "blur(16px)";
+          el.style.boxShadow = "0 8px 30px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)";
           el.style.display = "flex";
           el.style.alignItems = "center";
           el.style.gap = "16px";
-          el.style.transition = "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+          el.style.transition = "all 0.25s ease-out";
           el.style.maxWidth = "880px";
           el.style.width = "auto";
           document.body.appendChild(el);
         }
         el.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="background: rgba(105, 40, 234, 0.25); border: 1px solid rgba(139, 92, 246, 0.5); color: #C4B5FD; font-size: 11px; font-weight: 800; font-family: monospace; letter-spacing: 0.08em; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase;">
+            <div style="background: #1C1B1A; color: #FFFFFF; font-size: 11px; font-weight: 700; font-family: monospace; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">
               ${chapterTag}
             </div>
-            <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); color: #E2E8F0; font-size: 11px; font-weight: 700; font-family: monospace; padding: 4px 10px; border-radius: 9999px;">
+            <div style="background: #F3F1EC; border: 1px solid #DDD9CE; color: #4A4742; font-size: 11px; font-weight: 700; font-family: monospace; padding: 4px 8px; border-radius: 4px;">
               ${timecode}
             </div>
           </div>
           <div>
-            <div style="color: #F8FAFC; font-size: 13.5px; font-weight: 700; font-family: system-ui, -apple-system, sans-serif; letter-spacing: -0.01em;">
+            <div style="color: #1C1B1A; font-size: 13.5px; font-weight: 700; font-family: system-ui, -apple-system, sans-serif; letter-spacing: -0.01em;">
               ${title}
             </div>
-            <div style="color: #94A3B8; font-size: 11.5px; font-family: monospace; margin-top: 1px;">
+            <div style="color: #66635D; font-size: 11.5px; font-family: monospace; margin-top: 1px;">
               ${subtitle}
             </div>
           </div>
@@ -244,14 +243,14 @@ async function main() {
 
     // 0:28 - 0:34: Trigger Safe Swap
     await setBanner(
-      "Live Intent Execution — Safe Swap 0.1 SOL to USDC",
+      "Live Intent Execution — Safe Swap 0.1 SOL for USDC",
       "LangGraph State Machine · Real-Time Pyth Oracle · Jupiter Reference Spread",
       "CHAPTER 2 / 5",
       "[0:18 – 0:55]"
     );
 
     const safeSwapChip = page.getByRole("button", {
-      name: /Safe Swap \(0\.1 SOL/i,
+      name: /Swap 0\.1 SOL/i,
     });
     if (await safeSwapChip.isVisible()) {
       const chipBox = await safeSwapChip.boundingBox();
@@ -265,14 +264,14 @@ async function main() {
       await safeSwapChip.click();
     } else {
       const input = page.locator("input[placeholder*='Swap 0.1 SOL']");
-      await input.fill("Swap 0.1 SOL to USDC with 50bps slippage");
+      await input.fill("Swap 0.1 SOL for USDC with 0.5% max slippage");
       await page.getByRole("button", { name: "Simulate & Guardrail" }).click();
     }
 
     // Wait for agent pipeline and sentinel risk card
     console.log("[Demo] Waiting for simulation & risk analysis to complete...");
-    await page.waitForSelector("text=Sentinel Risk Summary", {
-      timeout: 25000,
+    await page.waitForSelector("text=Pre-Flight Sentinel Risk Assessment", {
+      timeout: 30000,
     });
     await sleep(1200);
 
@@ -383,12 +382,12 @@ async function main() {
       "[1:25 – 1:50]"
     );
 
-    // Scroll to top and switch to Token Safety Scanner tab
+    // Scroll to top and switch to Token Auditor tab
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     await sleep(1000);
 
     const scannerTabBtn = page.getByRole("button", {
-      name: "Token Safety Scanner",
+      name: "Token Auditor",
     });
     if (await scannerTabBtn.isVisible()) {
       await scannerTabBtn.click();
@@ -442,17 +441,17 @@ async function main() {
     await waitTarget(masterVideoStart, 110000, "Section 4 [1:25 - 1:50] complete");
 
     // =========================================================================
-    // SECTION 5: [1:50 – 2:05] Engineering Rigor & Close (15 seconds)
+    // SECTION 5: [1:50 – 2:05] Engineering Rigor & Architecture Proofs (15 seconds)
     // =========================================================================
-    console.log("[Section 5: 1:50 - 2:05] Engineering Rigor & Close");
+    console.log("[Section 5: 1:50 - 2:05] Engineering Rigor & Architecture Proofs");
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     await sleep(800);
 
-    // Switch back to copilot overview
-    const copilotTabBtn = page.getByRole("button", { name: "Copilot & Sentinel" });
-    if (await copilotTabBtn.isVisible()) {
-      await copilotTabBtn.click();
-      await sleep(1200);
+    // Switch to Architecture & Proofs tab
+    const docsTabBtn = page.getByRole("button", { name: "Architecture & Proofs" });
+    if (await docsTabBtn.isVisible()) {
+      await docsTabBtn.click();
+      await sleep(1500);
     }
 
     await setBanner(
@@ -461,6 +460,9 @@ async function main() {
       "CHAPTER 5 / 5",
       "[1:50 – 2:05]"
     );
+
+    await smoothMove(960, 400);
+    await sleep(2000);
 
     // Wait until exactly 2:05 (125s) in the recorded video file
     await waitTarget(masterVideoStart, 125000, "Section 5 [1:50 - 2:05] complete");

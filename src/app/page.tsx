@@ -24,6 +24,7 @@ import type { PythPriceData } from "@/lib/solana/pyth";
 import type { JupiterReferenceQuote } from "@/lib/solana/jupiter";
 import type { SimulationResult } from "@/lib/solana/simulation";
 import {
+  Shield,
   ShieldCheck,
   Zap,
   Activity,
@@ -31,6 +32,11 @@ import {
   ExternalLink,
   ChevronRight,
   Info,
+  CheckCircle2,
+  Lock,
+  ArrowRight,
+  Code2,
+  FileCheck,
 } from "lucide-react";
 
 interface AgentApiResponse {
@@ -52,7 +58,9 @@ interface AgentApiResponse {
 export default function Home() {
   const { connected, publicKey } = useWallet();
 
-  const [activeTab, setActiveTab] = useState<"copilot" | "scanner">("copilot");
+  const [activeTab, setActiveTab] = useState<
+    "copilot" | "sentinel" | "scanner" | "docs"
+  >("copilot");
   const [prompt, setPrompt] = useState(PRESET_SCENARIOS[0].prompt);
   const [spendingCapSol, setSpendingCapSol] = useState(1.0);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +115,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080912] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#FBFBFA] text-[#1C1B1A]">
       <WalletHeader
         burner={burner}
         onSelectBurner={setBurner}
@@ -115,44 +123,42 @@ export default function Home() {
         onSelectTab={setActiveTab}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
-        {/* Pro Hero & Security Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-white/5 pb-6">
-          <div className="space-y-2.5 max-w-3xl">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 text-violet-300 text-xs font-semibold shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Solana Actions v2.2.1 · LangGraph Multi-Agent · Devnet Guardrails</span>
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+        {/* Simple Non-Specialist Header Banner */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E4DC] pb-6">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-mono font-medium bg-[#F3F1EC] text-[#66635D] border border-[#E7E4DC]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1B6635]" />
+              <span>Solana Actions v2.2.1 · LangGraph Multi-Agent · Devnet Active</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
-              AI Proposes.{" "}
-              <span className="text-violet-400">
-                Deterministic Guardrails Enforce.
-              </span>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1C1B1A]">
+              Autonomous DeFi Intent Copilot with Pre-Flight Guardrails
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-              Autonomous intent copilot for Solana DeFi. Pre-flight RPC simulation, live Pyth oracle verification, atomic 2-of-2 Ed25519 co-signing, and cryptographic on-chain SPL Memo audit proofs.
+            <p className="text-xs sm:text-sm text-[#66635D] leading-relaxed">
+              Express your trading intent in natural language. Deterministic security guardrails simulate on-chain transactions, verify Pyth oracle prices, and guard against prompt injection before you sign.
             </p>
           </div>
 
           {/* Quick HUD Metrics */}
-          <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
-            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
-              <span className="text-[10px] text-slate-400 block uppercase">Policy Enforcer</span>
-              <span className="text-emerald-400 font-bold">Deterministic</span>
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs shrink-0">
+            <div className="px-3 py-2 rounded-md bg-white border border-[#E7E4DC] space-y-0.5">
+              <span className="text-[10px] text-[#8C887F] block uppercase font-semibold">Guardrail Gate</span>
+              <span className="text-[#1B6635] font-bold">Deterministic</span>
             </div>
-            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
-              <span className="text-[10px] text-slate-400 block uppercase">Atomic Settlement</span>
-              <span className="text-violet-300 font-bold">572 Bytes</span>
+            <div className="px-3 py-2 rounded-md bg-white border border-[#E7E4DC] space-y-0.5">
+              <span className="text-[10px] text-[#8C887F] block uppercase font-semibold">Atomic Swap</span>
+              <span className="text-[#1C1B1A] font-bold">572 Bytes</span>
             </div>
-            <div className="px-3.5 py-2 rounded-2xl bg-[#101224]/80 border border-violet-500/20 space-y-0.5 shadow-sm">
-              <span className="text-[10px] text-slate-400 block uppercase">On-Chain Memo</span>
-              <span className="text-indigo-300 font-bold">SHA-256 Proof</span>
+            <div className="px-3 py-2 rounded-md bg-white border border-[#E7E4DC] space-y-0.5">
+              <span className="text-[10px] text-[#8C887F] block uppercase font-semibold">On-Chain Audit</span>
+              <span className="text-[#1C1B1A] font-bold">SHA-256 Memo</span>
             </div>
           </div>
         </div>
 
-        {activeTab === "copilot" ? (
-          <>
+        {/* Tab 1: Copilot View */}
+        {activeTab === "copilot" && (
+          <div className="space-y-6">
             <ChatInterface
               prompt={prompt}
               onPromptChange={setPrompt}
@@ -171,7 +177,7 @@ export default function Home() {
             )}
 
             {requestError && (
-              <div className="rounded-2xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-mono text-rose-300 shadow-md">
+              <div className="rounded-md border border-[#F0CDCD] bg-[#FDF4F4] p-4 text-xs font-mono text-[#8C2323]">
                 <strong>Pipeline Error:</strong> {requestError}
               </div>
             )}
@@ -195,6 +201,18 @@ export default function Home() {
                     portfolio={agentState.portfolio}
                     warnings={agentState.intent?.warnings}
                   />
+                  
+                  <div className="mt-3 flex items-center justify-between p-3 rounded-md bg-white border border-[#E7E4DC] text-xs font-mono">
+                    <span className="text-[#66635D]">Need deep on-chain simulation or CU breakdown?</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("sentinel")}
+                      className="text-[#1C1B1A] font-semibold hover:underline flex items-center gap-1"
+                    >
+                      <span>Open Sentinel Cockpit</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
 
                 {(agentState.actionUrl || agentState.status === "blocked") && (
@@ -211,13 +229,180 @@ export default function Home() {
                 )}
               </div>
             )}
-          </>
-        ) : (
+          </div>
+        )}
+
+        {/* Tab 2: Sentinel Cockpit View */}
+        {activeTab === "sentinel" && (
+          <div className="space-y-6">
+            <div className="bg-white border border-[#E7E4DC] rounded-lg p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E7E4DC] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-md bg-[#F3F1EC] border border-[#DDD9CE] flex items-center justify-center text-[#1C1B1A]">
+                    <Shield className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-[#1C1B1A]">
+                      Pre-Flight Sentinel Cockpit
+                    </h2>
+                    <p className="text-xs text-[#66635D]">
+                      Deterministic security engine monitoring Pyth price feeds, simulation balance deltas, and compute units.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded text-xs font-mono bg-[#EBF4EE] text-[#1B6635] border border-[#CDE8D5] font-medium">
+                  Gate Enforced
+                </span>
+              </div>
+
+              {agentState ? (
+                <div className="space-y-6 pt-2">
+                  <RiskCard
+                    status={agentState.status}
+                    risk={agentState.risk}
+                    sim={agentState.sim}
+                    plan={agentState.plan}
+                    market={agentState.market}
+                    jupiterQuote={agentState.jupiterQuote}
+                    portfolio={agentState.portfolio}
+                    warnings={agentState.intent?.warnings}
+                  />
+
+                  {agentState.timeline && (
+                    <AgentTimeline
+                      steps={agentState.timeline}
+                      isLoading={false}
+                      totalLatencyMs={agentState.latencyMs ?? null}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4 py-4 text-xs">
+                  <p className="text-[#66635D] leading-relaxed">
+                    No active transaction evaluated yet. Run a prompt in the <strong>Copilot</strong> tab to inspect live pre-flight simulation, Pyth vs Jupiter reference pricing, and on-chain memo proofs.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <div className="p-3.5 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-1">
+                      <span className="font-semibold text-[#1C1B1A] block">1. Pyth Oracle Guard</span>
+                      <p className="text-[#66635D]">Verifies live devnet SOL/USD price. Flags price discrepancy &gt;2% vs DEX reference.</p>
+                    </div>
+                    <div className="p-3.5 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-1">
+                      <span className="font-semibold text-[#1C1B1A] block">2. RPC Simulation</span>
+                      <p className="text-[#66635D]">Runs preflight on Solana Devnet RPC. Asserts net token deltas and compute budget &lt;100k CU.</p>
+                    </div>
+                    <div className="p-3.5 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-1">
+                      <span className="font-semibold text-[#1C1B1A] block">3. Cryptographic Memo</span>
+                      <p className="text-[#66635D]">Anchors SHA-256 hash of the execution plan into an on-chain SPL Memo instruction.</p>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("copilot");
+                        handleRunAgent(PRESET_SCENARIOS[0].prompt);
+                      }}
+                      className="px-4 py-2 bg-[#1C1B1A] text-white hover:bg-[#33312E] rounded-md font-medium text-xs transition"
+                    >
+                      Run Safe Swap Simulation in Copilot →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Token Auditor View */}
+        {activeTab === "scanner" && (
           <TokenScanner />
         )}
 
+        {/* Tab 4: Architecture & Proofs View */}
+        {activeTab === "docs" && (
+          <div className="space-y-6">
+            <div className="bg-white border border-[#E7E4DC] rounded-lg p-5 sm:p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-[#E7E4DC] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-md bg-[#F3F1EC] border border-[#DDD9CE] flex items-center justify-center text-[#1C1B1A]">
+                    <FileCheck className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-[#1C1B1A]">
+                      Architecture &amp; Security Proofs
+                    </h2>
+                    <p className="text-xs text-[#66635D]">
+                      Technical design specifications, non-custodial boundaries, and automated test proofs.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded text-xs font-mono bg-[#EBF4EE] text-[#1B6635] border border-[#CDE8D5] font-medium">
+                  254/254 Tests Passing
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed">
+                <div className="p-4 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-2">
+                  <h3 className="font-bold text-[#1C1B1A] flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Non-Custodial Multi-Agent Architecture</span>
+                  </h3>
+                  <p className="text-[#66635D]">
+                    The LLM (Gemini 2.5 Flash) only interprets natural language into structured JSON intents. It never generates raw bytecode or holds private keys. The deterministic LangGraph pipeline validates spending limits, simulates execution on Solana Devnet RPC, and constructs signed transactions.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-2">
+                  <h3 className="font-bold text-[#1C1B1A] flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5" />
+                    <span>Solana Actions &amp; Blinks Specification (v2.2.1)</span>
+                  </h3>
+                  <p className="text-[#66635D]">
+                    Approved plans generate compliant Solana Action endpoints with CORS headers, GET metadata, and POST endpoints delivering partially-signed wire transactions. Users can execute them in-app or share across Twitter/X and messaging apps via Dial.to.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-2">
+                  <h3 className="font-bold text-[#1C1B1A] flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>2-of-2 Ed25519 Atomic Settlement</span>
+                  </h3>
+                  <p className="text-[#66635D]">
+                    Swaps execute atomically: User SOL transfers to Aegis Vault, and Aegis Vault transfers dUSDC tokens to User Associated Token Account in a single transaction. Both parties must co-sign. If either leg fails, the entire transaction reverts.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-md border border-[#E7E4DC] bg-[#F8F7F4] space-y-2">
+                  <h3 className="font-bold text-[#1C1B1A] flex items-center gap-1.5">
+                    <Code2 className="h-3.5 w-3.5" />
+                    <span>On-Chain Cryptographic Memo Proofs</span>
+                  </h3>
+                  <p className="text-[#66635D]">
+                    Every approved plan includes an SPL Memo instruction containing <code className="bg-white px-1 py-0.5 rounded border border-[#E7E4DC] text-[#1C1B1A]">aegis:v1:&lt;sha256&gt;</code>. This binds the intent, simulated slippage, and timestamp immutably on the Solana blockchain for auditability.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-md border border-[#E7E4DC] bg-white space-y-2">
+                <span className="font-bold text-xs text-[#1C1B1A] block">
+                  Automated Verification Test Suite:
+                </span>
+                <p className="text-xs text-[#66635D]">
+                  AegisFlow runs a 4-tier automated test suite covering 254 test cases across Solana RPC features, boundary conditions, adversarial prompt injections, and end-to-end integration flows.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1 font-mono text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-[#F8F7F4] border border-[#E7E4DC] text-[#1C1B1A]">Tier 1 Features: 94 passing</span>
+                  <span className="px-2 py-0.5 rounded bg-[#F8F7F4] border border-[#E7E4DC] text-[#1C1B1A]">Tier 2 Boundaries: 112 passing</span>
+                  <span className="px-2 py-0.5 rounded bg-[#F8F7F4] border border-[#E7E4DC] text-[#1C1B1A]">Tier 3 Pairwise: 32 passing</span>
+                  <span className="px-2 py-0.5 rounded bg-[#F8F7F4] border border-[#E7E4DC] text-[#1C1B1A]">Tier 4 Scenarios: 16 passing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <footer className="mt-auto pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-4">
+        <footer className="mt-auto pt-6 border-t border-[#E7E4DC] flex flex-col sm:flex-row items-center justify-between text-xs text-[#8C887F] font-mono gap-4">
           <div>
             AegisFlow v1.0 · MLH Solana Hackathon · Solana Devnet
           </div>
@@ -226,7 +411,7 @@ export default function Home() {
               href="/actions.json"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-violet-400 transition"
+              className="hover:text-[#1C1B1A] transition"
             >
               /actions.json
             </a>
@@ -234,7 +419,7 @@ export default function Home() {
               href="https://explorer.solana.com/?cluster=devnet"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-violet-400 transition"
+              className="hover:text-[#1C1B1A] transition"
             >
               Solana Explorer (Devnet) ↗
             </a>
@@ -242,7 +427,7 @@ export default function Home() {
               href="https://faucet.solana.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-violet-400 transition"
+              className="hover:text-[#1C1B1A] transition"
             >
               Devnet Faucet ↗
             </a>
