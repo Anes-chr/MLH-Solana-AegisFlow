@@ -128,23 +128,34 @@ export function ActionCard({
 
   if (status === "blocked") {
     return (
-      <section className="bg-white border border-[#F0CDCD] rounded-lg p-5 sm:p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-md bg-[#FDF4F4] border border-[#F0CDCD] flex items-center justify-center text-[#A83838] shrink-0">
+      <section className="bg-white border border-[#F5C6C6] rounded-lg p-5 sm:p-6 space-y-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-md bg-[#FDF2F2] border border-[#F5C6C6] flex items-center justify-center text-[#991B1B] shrink-0 mt-0.5">
             <Lock className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[#1C1B1A]">
+            <div className="flex items-center gap-2">
+              <span className="step-number">04</span>
+              <span className="badge-danger font-mono text-[10px]">
+                Execution Prevented
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-[#1C1B18] mt-1.5">
               Solana Action Blocked by Policy Gate
             </h3>
-            <p className="text-xs font-mono text-[#A83838]">
+            <p className="text-xs font-mono text-[#991B1B] mt-0.5">
               Risk Score: {riskScore ?? 100} / 100 · Execution Prohibited
             </p>
           </div>
         </div>
-        <p className="text-xs text-[#5C2323] leading-relaxed bg-[#FDF4F4] p-3.5 rounded-md border border-[#F0CDCD]">
-          Deterministic safety rules detected security violations (e.g. prompt injection, unauthorized contract, or spending cap breach). Zero transaction bytes were serialized to protect user funds.
-        </p>
+        <div className="text-xs text-[#5C2323] leading-relaxed bg-[#FDF2F2] p-4 rounded-md border border-[#F5C6C6] space-y-1.5">
+          <p className="font-semibold text-[#991B1B]">
+            What does this mean for your wallet?
+          </p>
+          <p>
+            Because our deterministic safety checks detected a policy violation (such as a prompt injection attack, unauthorized address, or spending cap breach), AegisFlow refused to generate a signable transaction. <strong>Zero bytes were sent to your wallet, and your funds remain 100% untouched.</strong>
+          </p>
+        </div>
       </section>
     );
   }
@@ -181,12 +192,16 @@ export function ActionCard({
 
       const postData = await postRes.json();
       if (!postRes.ok) {
-        throw new Error(postData.error || `Action endpoint returned HTTP ${postRes.status}`);
+        throw new Error(
+          postData.error || `Action endpoint returned HTTP ${postRes.status}`
+        );
       }
 
       const txBase64 = postData.transaction as string;
       if (!txBase64) {
-        throw new Error("Action response did not contain transaction base64 payload.");
+        throw new Error(
+          "Action response did not contain transaction base64 payload."
+        );
       }
 
       // Step 2: Deserialize transaction
@@ -341,30 +356,28 @@ export function ActionCard({
   };
 
   return (
-    <section className="bg-white border border-[#E7E4DC] rounded-lg p-5 sm:p-6 space-y-5 shadow-sm text-[#1C1B1A]">
-      <div className="flex items-start justify-between gap-3 border-b border-[#E7E4DC] pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-[#F3F1EC] border border-[#DDD9CE] flex items-center justify-center text-[#1C1B1A] shrink-0">
-            <Zap className="h-4 w-4" />
-          </div>
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#66635D] block font-semibold">
-              Ready for Settlement · Devnet
+    <section className="obsidian-card p-5 sm:p-6 space-y-5 text-[#1C1B18]">
+      <div className="flex items-start justify-between gap-3 border-b border-[#E5E0D8] pb-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="step-number">04</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#EBF5EE] text-[#166534] border border-[#C5E3CD] font-semibold">
+              Ready to Sign · Devnet
             </span>
-            <h3 className="text-sm sm:text-base font-bold text-[#1C1B1A]">
-              {meta?.title || "Approved Transaction Plan"}
-            </h3>
           </div>
+          <h3 className="text-base sm:text-lg font-bold text-[#1C1B18] pt-1">
+            {meta?.title || "Approve & Sign Transaction"}
+          </h3>
+          <p className="text-xs text-[#5C5852]">
+            Click below to co-sign this verified transaction using your test wallet or browser extension.
+          </p>
         </div>
-        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#EBF4EE] text-[#1B6635] border border-[#CDE8D5] font-medium">
-          Co-Sign Verified
-        </span>
       </div>
 
       {meta?.description && (
-        <p className="text-xs text-[#66635D] leading-relaxed bg-[#F8F7F4] border border-[#E7E4DC] rounded-md p-3.5 font-mono">
+        <div className="text-xs text-[#5C5852] leading-relaxed bg-[#FAF9F5] border border-[#E5E0D8] rounded-md p-3.5 font-mono">
           {meta.description}
-        </p>
+        </div>
       )}
 
       {/* 1-Click Signing Buttons */}
@@ -374,7 +387,7 @@ export function ActionCard({
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("wallet")}
-            className="w-full rounded-md bg-[#1C1B1A] hover:bg-[#33312E] disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-semibold text-white transition shadow-sm flex items-center justify-center gap-2"
+            className="w-full rounded-md bg-[#1C1B18] hover:bg-[#33312B] disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-bold text-white transition shadow-sm flex items-center justify-center gap-2"
           >
             {isExecuting ? (
               <>
@@ -383,7 +396,11 @@ export function ActionCard({
               </>
             ) : (
               <>
-                <span>Sign &amp; Execute Transaction ({publicKey.toBase58().slice(0, 4)}..{publicKey.toBase58().slice(-4)})</span>
+                <span>
+                  Sign &amp; Execute Transaction (
+                  {publicKey.toBase58().slice(0, 4)}..
+                  {publicKey.toBase58().slice(-4)})
+                </span>
                 <ArrowUpRight className="h-4 w-4" />
               </>
             )}
@@ -395,7 +412,7 @@ export function ActionCard({
             type="button"
             disabled={isExecuting}
             onClick={() => executeSignFlow("burner")}
-            className="w-full rounded-md bg-[#1C1B1A] hover:bg-[#33312E] disabled:opacity-50 px-5 py-3 text-xs sm:text-sm font-semibold text-white transition shadow-sm flex items-center justify-center gap-2"
+            className="w-full rounded-md bg-[#1C1B18] hover:bg-[#33312B] disabled:opacity-50 px-5 py-3.5 text-xs sm:text-sm font-bold text-white transition shadow-sm flex items-center justify-center gap-2"
           >
             {isExecuting ? (
               <>
@@ -404,47 +421,57 @@ export function ActionCard({
               </>
             ) : (
               <>
-                <Flame className="h-4 w-4 text-[#DDD9CE]" />
-                <span>1-Click Sign with Judge Burner ({burner.pubkey.slice(0, 4)}..{burner.pubkey.slice(-4)})</span>
+                <Flame className="h-4 w-4 text-amber-300" />
+                <span>
+                  1-Click Sign with Judge Burner ({burner.pubkey.slice(0, 4)}..
+                  {burner.pubkey.slice(-4)})
+                </span>
               </>
             )}
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={onOpenBurner}
-            className="w-full rounded-md border border-[#DDD9CE] bg-[#F8F7F4] hover:bg-[#F3F1EC] px-4 py-3 text-xs font-medium text-[#1C1B1A] transition flex items-center justify-center gap-2"
-          >
-            <Flame className="h-3.5 w-3.5 text-[#66635D]" />
-            <span>No Solana Wallet Extension? Launch 1-Click Judge Burner Wallet</span>
-          </button>
+          <div className="p-3.5 rounded-md bg-[#FDF8E8] border border-[#F3E0A2] space-y-2.5">
+            <p className="text-xs text-[#854D0E] font-medium">
+              <strong>Need a wallet to sign?</strong> You don&apos;t need any browser extension—click below to open a 1-Click Test Wallet:
+            </p>
+            <button
+              type="button"
+              onClick={onOpenBurner}
+              className="w-full rounded-md bg-[#1C1B18] hover:bg-[#33312B] px-4 py-3 text-xs font-bold text-white transition flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Flame className="h-4 w-4 text-amber-300" />
+              <span>
+                No Solana Wallet Extension? Launch 1-Click Judge Burner Wallet
+              </span>
+            </button>
+          </div>
         )}
       </div>
 
       {/* Execution Receipt */}
       {receipt && (
         <div
-          className={`rounded-md border p-4 space-y-2.5 text-xs font-mono shadow-sm ${
+          className={`rounded-md border p-4 space-y-3 text-xs shadow-sm ${
             receipt.mode === "confirmed_onchain"
-              ? "border-[#CDE8D5] bg-[#F3FAF5] text-[#1B6635]"
-              : "border-[#DDD9CE] bg-[#F8F7F4] text-[#1C1B1A]"
+              ? "border-[#C5E3CD] bg-[#EBF5EE] text-[#166534]"
+              : "border-[#C5E3CD] bg-[#F5FBF7] text-[#1C1B18]"
           }`}
         >
           <div className="font-bold flex items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-[#1B6635]" />
+            <span className="flex items-center gap-1.5 text-[#166534]">
+              <CheckCircle2 className="h-4 w-4 text-[#166534]" />
               <span>
                 {receipt.mode === "confirmed_onchain"
                   ? "Confirmed on Solana Devnet"
                   : "2-of-2 Ed25519 Co-Signature Verified"}
               </span>
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-white border border-[#E7E4DC] text-[#66635D]">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-[#C5E3CD] text-[#166534]">
               {receipt.wireBytes} bytes
             </span>
           </div>
           <p className="leading-relaxed text-[#383531]">{receipt.note}</p>
-          <div className="p-2.5 rounded bg-white text-[11px] text-[#66635D] break-all border border-[#E7E4DC]">
+          <div className="p-2.5 rounded bg-white text-[11px] font-mono text-[#5C5852] break-all border border-[#E5E0D8]">
             Signature: {receipt.signature}
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -453,7 +480,7 @@ export function ActionCard({
                 href={receipt.explorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md bg-[#1B6635] text-white px-3 py-1.5 font-semibold text-xs hover:bg-[#15522A] transition"
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#166534] text-white px-3.5 py-1.5 font-semibold text-xs hover:bg-[#125129] transition"
               >
                 <span>View on Solana Explorer (Devnet)</span>
                 <ExternalLink className="h-3 w-3" />
@@ -463,7 +490,7 @@ export function ActionCard({
               <button
                 type="button"
                 onClick={onOpenBurner}
-                className="underline text-[#1C1B1A] hover:text-[#66635D] font-semibold"
+                className="underline text-[#1C1B18] hover:text-[#5C5852] font-semibold"
               >
                 Open Faucet Helper →
               </button>
@@ -473,27 +500,35 @@ export function ActionCard({
       )}
 
       {execError && (
-        <div className="rounded-md border border-[#F0CDCD] bg-[#FDF4F4] p-3.5 text-xs text-[#8C2323] font-mono">
+        <div className="rounded-md border border-[#F5C6C6] bg-[#FDF2F2] p-3.5 text-xs text-[#991B1B] font-mono">
           <strong>Execution Error:</strong> {execError}
         </div>
       )}
 
       {/* Shareable Solana Blink Controls */}
-      <div className="pt-3 border-t border-[#E7E4DC] space-y-2">
+      <div className="pt-3.5 border-t border-[#E5E0D8] space-y-2.5">
+        <div className="space-y-0.5">
+          <span className="text-xs font-bold text-[#1C1B18] block">
+            Share as a Solana Blink (v2.2.1):
+          </span>
+          <p className="text-[11px] text-[#5C5852]">
+            This approved plan is also a portable Solana Action link that can be shared or inspected on Dial.to:
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleCopyAction}
-            className="flex-1 rounded-md border border-[#DDD9CE] bg-[#F8F7F4] hover:bg-[#F3F1EC] px-3.5 py-2 text-xs font-medium text-[#1C1B1A] transition flex items-center justify-center gap-1.5"
+            className="flex-1 rounded-md border border-[#D6D1C7] bg-[#F4F1EA] hover:bg-[#EAE6DC] px-3.5 py-2 text-xs font-semibold text-[#1C1B18] transition flex items-center justify-center gap-1.5"
           >
             {copiedUrl ? (
               <>
-                <Check className="h-3.5 w-3.5 text-[#1B6635]" />
+                <Check className="h-3.5 w-3.5 text-[#166534]" />
                 <span>Copied Action URL</span>
               </>
             ) : (
               <>
-                <Copy className="h-3.5 w-3.5 text-[#66635D]" />
+                <Copy className="h-3.5 w-3.5 text-[#5C5852]" />
                 <span>Copy Solana Action URL</span>
               </>
             )}
@@ -502,15 +537,17 @@ export function ActionCard({
             href={resolvedDialUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex-1 text-center rounded-md border border-[#DDD9CE] bg-[#F8F7F4] hover:bg-[#F3F1EC] px-3.5 py-2 text-xs font-medium text-[#1C1B1A] transition flex items-center justify-center gap-1.5"
+            className="flex-1 text-center rounded-md border border-[#D6D1C7] bg-[#F4F1EA] hover:bg-[#EAE6DC] px-3.5 py-2 text-xs font-semibold text-[#1C1B18] transition flex items-center justify-center gap-1.5"
           >
             <span>Inspect Blink on Dial.to</span>
-            <ExternalLink className="h-3.5 w-3.5 text-[#66635D]" />
+            <ExternalLink className="h-3.5 w-3.5 text-[#5C5852]" />
           </a>
         </div>
-        <p className="text-[11px] text-[#8C887F] font-mono flex items-center gap-1.5 pt-1">
-          <Info className="h-3 w-3 text-[#66635D] shrink-0" />
-          <span>Devnet Blinks: Enable Devnet in Phantom / Solflare under Developer Settings → Testnet Mode.</span>
+        <p className="text-[11px] text-[#8A857D] font-mono flex items-center gap-1.5 pt-1">
+          <Info className="h-3 w-3 text-[#5C5852] shrink-0" />
+          <span>
+            Devnet Blinks: Enable Devnet in Phantom / Solflare under Developer Settings → Testnet Mode.
+          </span>
         </p>
       </div>
     </section>

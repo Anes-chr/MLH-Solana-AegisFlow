@@ -4,7 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { AccountModal } from "./AccountModal";
-import type { BurnerWalletState } from "@/lib/solana/burner";
+import {
+  type BurnerWalletState,
+  createBurnerWallet,
+} from "@/lib/solana/burner";
 import {
   Wallet,
   Activity,
@@ -15,19 +18,67 @@ import {
   Search,
   Cpu,
   FileText,
+  Compass,
+  Flame,
 } from "lucide-react";
+
+export type AppTab = "guide" | "copilot" | "sentinel" | "scanner" | "docs";
 
 export interface WalletHeaderProps {
   burner: BurnerWalletState | null;
   onSelectBurner: (burner: BurnerWalletState | null) => void;
-  activeTab?: "copilot" | "sentinel" | "scanner" | "docs";
-  onSelectTab?: (tab: "copilot" | "sentinel" | "scanner" | "docs") => void;
+  activeTab?: AppTab;
+  onSelectTab?: (tab: AppTab) => void;
 }
+
+const NAV_ITEMS: Array<{
+  id: AppTab;
+  step: string;
+  label: string;
+  shortLabel: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    id: "guide",
+    step: "01",
+    label: "Start Here (Guide)",
+    shortLabel: "01 · Guide",
+    Icon: Compass,
+  },
+  {
+    id: "copilot",
+    step: "02",
+    label: "AI Copilot",
+    shortLabel: "02 · Copilot",
+    Icon: Cpu,
+  },
+  {
+    id: "sentinel",
+    step: "03",
+    label: "Safety Inspector",
+    shortLabel: "03 · Safety",
+    Icon: Shield,
+  },
+  {
+    id: "scanner",
+    step: "04",
+    label: "Token Auditor",
+    shortLabel: "04 · Auditor",
+    Icon: Search,
+  },
+  {
+    id: "docs",
+    step: "05",
+    label: "How It Works",
+    shortLabel: "05 · Docs",
+    Icon: FileText,
+  },
+];
 
 export function WalletHeader({
   burner,
   onSelectBurner,
-  activeTab = "copilot",
+  activeTab = "guide",
   onSelectTab,
 }: WalletHeaderProps) {
   const [mounted, setMounted] = useState(false);
@@ -56,7 +107,8 @@ export function WalletHeader({
     const updateBalance = async () => {
       try {
         const lamports = await connection.getBalance(
-          publicKey || new (await import("@solana/web3.js")).PublicKey(activeAddress),
+          publicKey ||
+            new (await import("@solana/web3.js")).PublicKey(activeAddress),
           "confirmed"
         );
         if (!isCancelled) {
@@ -87,12 +139,17 @@ export function WalletHeader({
     }
   };
 
+  const handleInstantBurner = () => {
+    const fresh = createBurnerWallet();
+    onSelectBurner(fresh);
+  };
+
   if (!mounted) {
     return (
-      <header className="w-full bg-[#FBFBFA] border-b border-[#E7E4DC] px-4 sm:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="h-7 w-32 bg-[#EFECE6] rounded animate-pulse" />
-          <div className="h-7 w-28 bg-[#EFECE6] rounded animate-pulse" />
+      <header className="w-full bg-[#FAF9F5] border-b border-[#E5E0D8] px-4 sm:px-8 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="h-7 w-32 bg-[#EAE6DC] rounded animate-pulse" />
+          <div className="h-7 w-28 bg-[#EAE6DC] rounded animate-pulse" />
         </div>
       </header>
     );
@@ -100,15 +157,15 @@ export function WalletHeader({
 
   return (
     <>
-      <header className="w-full bg-[#FBFBFA]/95 backdrop-blur-sm border-b border-[#E7E4DC] sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 py-2.5">
-          {/* Brand */}
-          <div className="flex items-center gap-6">
+      <header className="w-full bg-[#FAF9F5]/95 backdrop-blur-sm border-b border-[#E5E0D8] sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
+          {/* Brand & Numbered Navigation */}
+          <div className="flex items-center gap-5">
             <div
-              className="flex items-center gap-2.5 cursor-pointer group"
-              onClick={() => onSelectTab?.("copilot")}
+              className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+              onClick={() => onSelectTab?.("guide")}
             >
-              <div className="h-7 w-7 rounded-md overflow-hidden shrink-0 border border-[#DDD9CE]">
+              <div className="h-8 w-8 rounded-md overflow-hidden shrink-0 border border-[#D6D1C7] shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/aegis-icon.svg"
@@ -116,169 +173,142 @@ export function WalletHeader({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-tight text-[#1C1B1A]">
-                  AegisFlow
-                </span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F3F1EC] text-[#66635D] border border-[#E7E4DC]">
-                  Devnet
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-sm tracking-tight text-[#1C1B18]">
+                    AegisFlow
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F4F1EA] text-[#5C5852] border border-[#E5E0D8]">
+                    Devnet
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#8A857D] hidden sm:block leading-none">
+                  Solana Safety Copilot
                 </span>
               </div>
             </div>
 
             {/* Modular Desktop Navigation Tabs */}
             {onSelectTab && (
-              <nav className="hidden md:flex items-center gap-1 border-l border-[#E7E4DC] pl-5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => onSelectTab("copilot")}
-                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                    activeTab === "copilot"
-                      ? "bg-[#1C1B1A] text-white font-medium"
-                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
-                  }`}
-                >
-                  <Cpu className="h-3.5 w-3.5" />
-                  <span>Copilot</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onSelectTab("sentinel")}
-                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                    activeTab === "sentinel"
-                      ? "bg-[#1C1B1A] text-white font-medium"
-                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
-                  }`}
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  <span>Sentinel Cockpit</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onSelectTab("scanner")}
-                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                    activeTab === "scanner"
-                      ? "bg-[#1C1B1A] text-white font-medium"
-                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
-                  }`}
-                >
-                  <Search className="h-3.5 w-3.5" />
-                  <span>Token Auditor</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onSelectTab("docs")}
-                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                    activeTab === "docs"
-                      ? "bg-[#1C1B1A] text-white font-medium"
-                      : "text-[#66635D] hover:text-[#1C1B1A] hover:bg-[#F3F1EC]"
-                  }`}
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>Architecture &amp; Proofs</span>
-                </button>
+              <nav
+                aria-label="Main Navigation"
+                className="hidden lg:flex items-center gap-1 border-l border-[#E5E0D8] pl-4 text-xs"
+              >
+                {NAV_ITEMS.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => onSelectTab(item.id)}
+                      className={`px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+                        isActive
+                          ? "bg-[#1C1B18] text-[#FAF9F5] font-semibold shadow-sm"
+                          : "text-[#5C5852] hover:text-[#1C1B18] hover:bg-[#F4F1EA] font-medium"
+                      }`}
+                    >
+                      <span
+                        className={`font-mono text-[10px] px-1 py-0.2 rounded ${
+                          isActive
+                            ? "bg-white/15 text-[#FAF9F5]"
+                            : "bg-[#EAE6DC] text-[#5C5852]"
+                        }`}
+                      >
+                        {item.step}
+                      </span>
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
               </nav>
             )}
           </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center gap-2.5">
-            {/* Live Helius RPC Status */}
+          {/* Right Wallet & Status Controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Live RPC Status */}
             <div
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F3F1EC] border border-[#E7E4DC] text-[11px] text-[#4A4742]"
-              title="Connected to Helius Devnet RPC"
+              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F4F1EA] border border-[#E5E0D8] text-[11px] text-[#5C5852] font-medium"
+              title="Connected to Solana Devnet RPC"
             >
-              <Activity className="h-3 w-3 text-emerald-600" />
-              <span>Helius Devnet</span>
+              <Activity className="h-3 w-3 text-[#166534]" />
+              <span>Devnet Active</span>
             </div>
+
+            {/* If no wallet is active yet, provide an explicit 1-Click Test Wallet button */}
+            {!activeAddress && (
+              <button
+                type="button"
+                onClick={handleInstantBurner}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F4F1EA] hover:bg-[#EAE6DC] border border-[#D6D1C7] text-[#1C1B18] text-xs font-semibold transition"
+                title="Create a temporary Devnet wallet in 1 click without any browser extension"
+              >
+                <Flame className="h-3.5 w-3.5 text-amber-700" />
+                <span>1-Click Test Wallet</span>
+              </button>
+            )}
 
             {/* Account / Wallet Trigger */}
             <button
+              type="button"
               onClick={() => setIsModalOpen(true)}
               aria-label="Account and Wallet Settings"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#1C1B1A] hover:bg-[#33312E] text-white text-xs font-medium transition shadow-sm"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#1C1B18] hover:bg-[#33312B] text-[#FAF9F5] text-xs font-semibold transition shadow-sm"
             >
               <Wallet className="h-3.5 w-3.5" />
               {activeAddress ? (
                 <>
+                  <span className="text-[10px] uppercase tracking-wider text-[#CFC9BE] hidden sm:inline">
+                    {connected ? "Wallet:" : "Test Wallet:"}
+                  </span>
                   <span className="font-mono">
                     {activeAddress.slice(0, 4)}...{activeAddress.slice(-4)}
                   </span>
                   {balance !== null && (
-                    <span className="px-1.5 py-0.2 rounded bg-white/20 text-[10px] font-mono">
+                    <span className="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono">
                       {balance.toFixed(2)} SOL
                     </span>
                   )}
                   <span
                     onClick={handleCopy}
-                    className="p-0.5 rounded hover:bg-white/20 text-slate-300 hover:text-white transition"
-                    title="Copy Address"
+                    className="p-0.5 rounded hover:bg-white/20 text-[#CFC9BE] hover:text-white transition"
+                    title="Copy Your Wallet Address"
                   >
                     {copied ? (
-                      <Check className="h-3 w-3 text-emerald-400" />
+                      <Check className="h-3 w-3 text-emerald-300" />
                     ) : (
                       <Copy className="h-3 w-3" />
                     )}
                   </span>
                 </>
               ) : (
-                <span>Connect Wallet</span>
+                <span>Wallet &amp; Faucet</span>
               )}
-              <ChevronDown className="h-3 w-3 opacity-60" />
+              <ChevronDown className="h-3 w-3 opacity-70" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Sub-Navigation Bar */}
+        {/* Tablet / Mobile Navigation Bar */}
         {onSelectTab && (
-          <div className="flex md:hidden border-t border-[#E7E4DC] px-4 py-1.5 gap-1 bg-[#F5F3ED] overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => onSelectTab("copilot")}
-              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
-                activeTab === "copilot"
-                  ? "bg-[#1C1B1A] text-white font-medium"
-                  : "text-[#66635D]"
-              }`}
-            >
-              Copilot
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectTab("sentinel")}
-              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
-                activeTab === "sentinel"
-                  ? "bg-[#1C1B1A] text-white font-medium"
-                  : "text-[#66635D]"
-              }`}
-            >
-              Sentinel
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectTab("scanner")}
-              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
-                activeTab === "scanner"
-                  ? "bg-[#1C1B1A] text-white font-medium"
-                  : "text-[#66635D]"
-              }`}
-            >
-              Token Auditor
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectTab("docs")}
-              className={`px-2.5 py-1 rounded text-xs whitespace-nowrap ${
-                activeTab === "docs"
-                  ? "bg-[#1C1B1A] text-white font-medium"
-                  : "text-[#66635D]"
-              }`}
-            >
-              Proofs
-            </button>
+          <div className="flex lg:hidden border-t border-[#E5E0D8] px-4 py-2 gap-1.5 bg-[#F4F1EA] overflow-x-auto">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectTab(item.id)}
+                  className={`px-2.5 py-1 rounded-md text-xs whitespace-nowrap transition ${
+                    isActive
+                      ? "bg-[#1C1B18] text-[#FAF9F5] font-semibold"
+                      : "text-[#5C5852] hover:text-[#1C1B18] bg-white/60 border border-[#E5E0D8]"
+                  }`}
+                >
+                  {item.shortLabel}
+                </button>
+              );
+            })}
           </div>
         )}
       </header>
