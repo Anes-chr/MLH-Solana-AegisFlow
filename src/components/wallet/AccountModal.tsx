@@ -144,12 +144,16 @@ export function AccountModal({
       const res = await fetch("/api/burner-faucet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientPubkey: activeAddress, amountSol: 0.1 }),
+        body: JSON.stringify({
+          pubkey: activeAddress,
+          recipientPubkey: activeAddress,
+          amountSol: 0.1,
+        }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok && (data.success || data.ok || data.funded)) {
         setFaucetMessage(
-          `Funded +0.1 SOL on Devnet! (Balance: ${data.confirmedBalanceSol} SOL)`
+          `Funded Devnet SOL! (Balance: ${data.confirmedBalanceSol ?? data.balanceSol ?? "Funded"} SOL)`
         );
         fetchBalance(activeAddress);
       } else {

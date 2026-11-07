@@ -42,7 +42,12 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  const rawPubkey = typeof body.pubkey === 'string' ? body.pubkey.trim() : '';
+  const rawPubkey =
+    typeof body.pubkey === 'string'
+      ? body.pubkey.trim()
+      : typeof body.recipientPubkey === 'string'
+      ? body.recipientPubkey.trim()
+      : '';
   if (!rawPubkey) {
     return NextResponse.json(
       { error: 'Missing "pubkey" field in request body.' },
