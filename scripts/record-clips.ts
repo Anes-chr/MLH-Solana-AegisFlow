@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 
 const CLIPS_DIR = path.resolve(process.cwd(), "recordings", "clips");
-const TARGET_URL = process.env.TARGET_URL || "https://aegisflow.vercel.app";
+const TARGET_URL = process.env.TARGET_URL || "http://localhost:3000";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -148,12 +148,13 @@ async function main() {
     const video = p.video();
     await p.close();
     if (video) {
-      const origPath = await video.path();
       const targetPath = path.join(CLIPS_DIR, clipName);
       if (fs.existsSync(targetPath)) {
-        fs.unlinkSync(targetPath);
+        try {
+          fs.unlinkSync(targetPath);
+        } catch {}
       }
-      fs.renameSync(origPath, targetPath);
+      await video.saveAs(targetPath);
       const stat = fs.statSync(targetPath);
       console.log(`[Clip Saved] ${clipName} (${(stat.size / (1024 * 1024)).toFixed(2)} MB)`);
     }
