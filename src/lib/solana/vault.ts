@@ -112,8 +112,8 @@ export function getDevnetVaultConfig(): VaultConfig {
   } else if (metadata?.dUsdcMint) {
     mintPubkey = new PublicKey(metadata.dUsdcMint);
   } else {
-    // Deterministic fallback mint
-    mintPubkey = Keypair.fromSeed(new Uint8Array(32).fill(88)).publicKey;
+    // Real on-chain verified dUSDC Devnet mint
+    mintPubkey = new PublicKey('9v8dv2aJ7dG9crg699zfsFXBdM7gq8eDyk5t6SnZ8VJZ');
   }
 
   // Resolve ATA (canonical SPL ATA unless explicitly overridden via env)
