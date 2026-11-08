@@ -31,7 +31,7 @@ export interface AccountModalProps {
   onSelectBurner: (burner: BurnerWalletState | null) => void;
 }
 
-const VAULT_PUBKEY_DISPLAY = "BGUAURMy6E4LiFoxCSR9WD2u9DFDWDboNuC2Pg7JfVyb";
+const VAULT_PUBKEY_DISPLAY = "BRKVJTUZkfZg2SSNaPEyrekJm8UqGgsyqC1qQHKwSi35";
 
 export function AccountModal({
   isOpen,
