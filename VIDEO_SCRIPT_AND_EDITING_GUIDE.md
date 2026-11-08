@@ -1,38 +1,55 @@
 # AegisFlow — Fast-Paced Demo Video Master Script & Precision Editing Guide
 
-**Target Video File**: `recordings/aegisflow-demo.webm` (1080p 60fps · 27.60 MB)  
+**Target Master Video**: `recordings/aegisflow-demo.webm` (1080p 60fps · 37.8 MB · 91.6s)  
 **Hosted Showcase Deployment**: [https://aegisflow.vercel.app](https://aegisflow.vercel.app)  
 **Target Tracks**: AI Track ($100 Digital Gift Card) · Top 3 Overall ($1,000 Microgrant) · Best Beginner Hack ($100 Digital Gift Card)  
-**Total Runtime**: 1:40 (100 Seconds · Fast-Paced, Snappy, Zero Dead Time)
+**Verified On-Chain Swap Signature**: `2fZUr59z9LG5Uvx8z7GDAtdGBxzC2Wm1og3A4cZXkvLrV9frYp3M7iQg2fuhXnditqJPvHTPtv7VLQPQ8o5S4Wwn` ([Solana Explorer](https://explorer.solana.com/tx/2fZUr59z9LG5Uvx8z7GDAtdGBxzC2Wm1og3A4cZXkvLrV9frYp3M7iQg2fuhXnditqJPvHTPtv7VLQPQ8o5S4Wwn?cluster=devnet))  
+**Verified On-Chain dUSDC Mint**: `9v8dv2aJ7dG9crg699zfsFXBdM7gq8eDyk5t6SnZ8VJZ` ([Solana Explorer](https://explorer.solana.com/address/9v8dv2aJ7dG9crg699zfsFXBdM7gq8eDyk5t6SnZ8VJZ?cluster=devnet))  
+**AegisFlow Devnet Vault**: `BRKVJTUZkfZg2SSNaPEyrekJm8UqGgsyqC1qQHKwSi35` (Funded with real Devnet SOL & 1,000,000 dUSDC)
 
 ---
 
-## Executive Production Overview
+## 🎬 Studio Clips Directory (`recordings/clips/`)
 
-This master editing guide is synchronized directly with the recorded demo video (`recordings/aegisflow-demo.webm`). It cuts out all sluggish pauses, delivering a high-energy, Apple-keynote-style walkthrough where every second is packed with motion, dynamic interactions, live Solana Devnet blockchain execution, and genuine faucet funding.
+Each chapter has been extracted losslessly with frame-accurate precision (1080p 60fps VP9):
 
-### Visual Theme & Styling
-- **Canvas / Background**: Warm Editorial Beige (`#FAF9F5`)
-- **Card Surfaces**: Pure Studio White (`#FFFFFF`) with subtle charcoal borders (`#E5E0D8`)
-- **Text & Accents**: Deep Espresso Charcoal (`#1C1B18`), Subdued Muted Slate (`#5C5852`)
-- **Safety Approval**: Forest Emerald Green (`#166534`, Badge `#EBF5EE`, Border `#C5E3CD`)
-- **Pre-Flight Block**: Crimson Rose (`#991B1B`, Badge `#FDF2F2`, Border `#F5C6C6`)
-- **Warning / Sandbox**: Warm Amber Gold (`#854D0E`, Badge `#FDF8E8`, Border `#F3E0A2`)
+| Clip File | Chapter Title | Duration | Size | Key Action Captured |
+| :--- | :--- | :---: | :---: | :--- |
+| **`01-guide.webm`** | Hero & 4-Step Architecture Guide | 10.8s | 5,073 KB | Warm beige hero, 4-step pipeline, 4-mission checklist |
+| **`02-wallet-faucet.webm`** | Wallet Onboarding & Live Devnet Faucet | 6.5s | 3,057 KB | In-browser keypair, real balance, faucet trigger & confirmation |
+| **`03-safe-swap.webm`** | Copilot Safe Swap & On-Chain Devnet Broadcast | 18.8s | 6,372 KB | 5-stage timeline, 0/100 SAFE, 1-click co-sign, **confirmed on-chain receipt** |
+| **`04-injection-attack.webm`** | Adversarial Prompt Injection Defense | 8.9s | 5,682 KB | Intercepted in <400ms, 100/100 BLOCKED, execution locked |
+| **`05-safety-lab.webm`** | Interactive Safety Lab Policy Sandbox | 9.9s | 4,818 KB | Dynamic policy slider, Known Drainer toggle, live recalculation |
+| **`06-token-auditor.webm`** | Token & Mint Security Auditor | 17.9s | 6,945 KB | Wrapped SOL (0/100 SAFE) & PayPal USD (PermanentDelegate caution) |
+| **`07-proofs.webm`** | Architecture Proofs & 254-Test Suite | 11.3s | 5,415 KB | Ping /actions.json HTTP 200 (38ms), 254/254 E2E scorecard |
+| **`08-dial-blink.webm`** | Solana Actions / Dial.to Blink Card | 3.5s | 394 KB | Instant Twitter/X Blink co-signing card |
 
 ---
 
-## Master Timeline & Chapter Breakdown (1:40 Total)
+## 💬 Prompt for Your Video Editor
 
+Paste this exact prompt along with your clips into your editor / editing conversation:
+
+```markdown
+Re-edit my AegisFlow hackathon demo video using the attached new clips.
+
+Files: 01-guide.webm, 02-wallet-faucet.webm, 03-safe-swap.webm,
+04-injection-attack.webm, 05-safety-lab.webm, 06-token-auditor.webm,
+07-proofs.webm (+ optional 08-dial-blink.webm)
+
+All reviewer feedback has been incorporated:
+- No floating "CHAPTER n/7" HUD pill overlay (the screen is 100% clean UI).
+- Generous 2–3s hold times on all results so viewers can read the numbers.
+- Smooth, single scrolls keeping key content in the upper 85% of the frame.
+- Real on-chain broadcast confirmed on Solana Devnet (signature: 2fZUr59z9LG5Uvx8z7GDAtdGBxzC2Wm1og3A4cZXkvLrV9frYp3M7iQg2fuhXnditqJPvHTPtv7VLQPQ8o5S4Wwn).
+- Honest live oracle price badge (CoinGecko Live Spot).
+- Wrapped SOL scores 0/100 SAFE in the Token Auditor (native mint special-cased).
+- Copilot banner bug fixed: no "Unfunded Wallet Detected" banner when holding SOL.
+
+Please assemble and trim the clips to match the word-for-word voiceover script below, add captions, and export in 1080p 60fps MP4/WebM.
 ```
-TIMELINE MAP (100s / 1:40 TOTAL)
-[0:00 – 0:12] ─── CHAPTER 1: Hero Hook & 4-Step Architecture Guide (12s)
-[0:12 – 0:26] ─── CHAPTER 2: 1-Click Test Wallet Onboarding & Faucet Funding (14s)
-[0:26 – 0:48] ─── CHAPTER 3: AI Copilot: Interactive Customizer & Safe Swap (22s)
-[0:48 – 1:04] ─── CHAPTER 4: Red-Team Adversarial Prompt Injection Defense (16s)
-[1:04 – 1:16] ─── CHAPTER 5: Interactive Safety Lab: Live Policy Simulator (12s)
-[1:16 – 1:28] ─── CHAPTER 6: Token-2022 Security Auditor & Rug Simulator (12s)
-[1:28 – 1:40] ─── CHAPTER 7: Interactive Proofs, /actions.json & 254-Test Suite (12s)
-```
+
+---
 
 ---
 

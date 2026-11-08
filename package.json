@@ -18,6 +18,7 @@
     "test:blinks-api": "tsx scripts/test-blinks-api.ts",
     "test:stretches": "tsx scripts/test-stretches.ts",
     "record:demo": "tsx scripts/record-demo-video.ts",
+    "record:clips": "tsx scripts/record-demo-clips.ts",
     "verify:deps": "npm ls @solana/web3.js"
   },
   "dependencies": {
