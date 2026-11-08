@@ -28,7 +28,8 @@ export interface MintSafetyFinding {
 }
 
 export interface EvaluateMintSafetyInput {
-  mint?: string;
+  mintAddress?: string | null;
+  isNativeWrappedSol?: boolean;
   mintAuthority: string | null;
   freezeAuthority: string | null;
   supplyRaw: bigint;
@@ -226,9 +227,21 @@ export function evaluateMintSafety(input: EvaluateMintSafetyInput): {
     });
   }
 
-  // Supply check (exempt canonical Wrapped SOL native mint So11111111111111111111111111111111111111112)
-  const isWrappedSol = input.mint === 'So11111111111111111111111111111111111111112';
-  if (input.supplyRaw === 0n && !isWrappedSol) {
+  // Supply check
+  if (
+    input.isNativeWrappedSol ||
+    input.mintAddress === 'So11111111111111111111111111111111111111112'
+  ) {
+    findings.push({
+      id: 'TOKEN_SUPPLY',
+      label: 'Circulating Supply',
+      passed: true,
+      severity: 'info',
+      penalty: 0,
+      detail:
+        'Native Wrapped SOL mint (supply dynamically backed 1:1 by SOL lamports).',
+    });
+  } else if (input.supplyRaw === 0n) {
     penalty += 20;
     findings.push({
       id: 'TOKEN_SUPPLY',
@@ -245,9 +258,7 @@ export function evaluateMintSafety(input: EvaluateMintSafetyInput): {
       passed: true,
       severity: 'info',
       penalty: 0,
-      detail: isWrappedSol
-        ? 'Native Wrapped SOL mint (supply dynamically backed 1:1 by locked SOL lamports).'
-        : 'Active non-zero token supply verified on-chain.',
+      detail: 'Active non-zero token supply verified on-chain.',
     });
   }
 
@@ -354,7 +365,6 @@ export async function scanTokenMint(
       const supplyRaw = 1_000_000_000_000n;
       const decimals = 6;
       const safety = evaluateMintSafety({
-        mint: mintPubkey.toBase58(),
         mintAuthority: vaultCfg.vaultPubkey.toBase58(),
         freezeAuthority: null,
         supplyRaw,
@@ -573,7 +583,9 @@ export async function scanTokenMint(
   const freezeAuthStr = unpacked.freezeAuthority ? unpacked.freezeAuthority.toBase58() : null;
 
   const safety = evaluateMintSafety({
-    mint: mintPubkey.toBase58(),
+    mintAddress: mintPubkey.toBase58(),
+    isNativeWrappedSol:
+      mintPubkey.toBase58() === 'So11111111111111111111111111111111111111112',
     mintAuthority: mintAuthStr,
     freezeAuthority: freezeAuthStr,
     supplyRaw: unpacked.supply,

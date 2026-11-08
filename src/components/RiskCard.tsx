@@ -80,10 +80,9 @@ export function RiskCard({
   const isCaution = risk.band === "caution";
 
   const requiredOutflowSol = sim ? Math.abs(sim.solDeltaUser) : 0;
-  // If the wallet holds sufficient balance (walletBalanceSol >= requiredOutflowSol), it is NOT unfunded.
   const isUnfundedWallet =
     walletBalanceSol !== null
-      ? (requiredOutflowSol > 0 ? walletBalanceSol < requiredOutflowSol : walletBalanceSol <= 0)
+      ? requiredOutflowSol > 0 && walletBalanceSol < requiredOutflowSol
       : Boolean(sim?.isSimulatedFallback);
 
   const bandColors = isSafe
@@ -341,7 +340,7 @@ export function RiskCard({
               <span>
                 {market.source === "pyth_hermes"
                   ? "Live Pyth Oracle SOL/USD Price:"
-                  : "Live Market Oracle SOL/USD Price:"}
+                  : "Live SOL/USD Market Price:"}
               </span>
             </span>
             <div className="flex items-center gap-2">
@@ -350,12 +349,12 @@ export function RiskCard({
               </span>
               <span className="px-2 py-0.5 rounded bg-[#EAE6DC] text-[10px] font-mono text-[#4A4742]">
                 {market.source === "pyth_hermes"
-                  ? "Pyth Network (Hermes v2)"
-                  : market.source === "binance_spot"
-                  ? "Spot Oracle (Binance Feed)"
+                  ? "Pyth Hermes v2"
                   : market.source === "coingecko_spot"
-                  ? "Spot Oracle (CoinGecko Feed)"
-                  : "Devnet Benchmark Oracle"}
+                  ? "CoinGecko Live Spot"
+                  : market.source === "binance_spot"
+                  ? "Binance Spot Feed"
+                  : "Deterministic Oracle"}
               </span>
             </div>
           </div>
